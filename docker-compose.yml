@@ -1,0 +1,42 @@
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
+    restart: no
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_MEMORY_LIMIT_MB: 2048
+    ports:
+      - "1433:1433"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /var/opt/mssql/data
+      - type: bind
+        source: ./logs
+        target: /var/opt/mssql/logs
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -U sa -P d3vt3am! -Q 'SELECT 1' -C || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+  cosmicbot:
+    depends_on:
+      sql:
+        condition: service_healthy
+    image: cosmicbot:latest
+    container_name: CosmicBot
+    restart: unless-stopped
+    environment:
+      DISCORD_BOT_TOKEN: "[YOUR DISCORD BOT TOKEN]"
+      SQL_SERVER: "localhost"
+      SQL_USER: "sa"
+      SQL_PASS: "YourStrong!Passw0rd"
+      SQL_DB: "CosmicBotDatabase"
+    network_mode: host
+
+volumes:
+  data:
+  logs:
