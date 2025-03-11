@@ -1,7 +1,9 @@
-﻿using CosmicBot.BotCommands;
-using Discord;
+﻿using Discord;
+using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 namespace CosmicBot.Service
 {
@@ -10,22 +12,34 @@ namespace CosmicBot.Service
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _handler;
         private readonly IServiceProvider _services;
+        private readonly IConfiguration _configuration;
+        private readonly LoggingService _loggingService;
 
-        public DiscordBotService(DiscordSocketClient client, InteractionService handler, IServiceProvider services)
+        public DiscordBotService(DiscordSocketClient client, 
+            InteractionService handler, 
+            IServiceProvider services, 
+            IConfiguration configuration,
+            LoggingService loggingService)
         {
             _client = client;
             _handler = handler;
             _services = services;
+            _configuration = configuration;
+            _loggingService = loggingService;
         }
 
         public async Task InitializeAsync()
         {
-            await _handler.AddModuleAsync<MinecraftCommandModule>(_services);
-            await _handler.AddModuleAsync<RedditCommandModule>(_services);
-            await _handler.AddModuleAsync<SettingsCommandModule>(_services);
+            await _handler.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            _handler.InteractionExecuted += HandleInteractionExecute;
+            _handler.Log += _loggingService.LogAsync;
+
+            _client.Log += _loggingService.LogAsync;
             _client.Ready += ReadyAsync;
             _client.InteractionCreated += HandleInteraction;
-            _handler.InteractionExecuted += HandleInteractionExecute;
+
+            await _client.LoginAsync(TokenType.Bot, _configuration["DISCORD_BOT_TOKEN"]);
+            await _client.StartAsync();
         }
 
         public async Task ReadyAsync()
@@ -59,7 +73,7 @@ namespace CosmicBot.Service
             }
         }
 
-        private Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, IResult result)
+        private Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, Discord.Interactions.IResult result)
         {
             if (!result.IsSuccess)
                 switch (result.Error)
