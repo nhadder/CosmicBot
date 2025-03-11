@@ -1,11 +1,14 @@
 ﻿using CosmicBot.DAL;
 using CosmicBot.Helpers;
 using CosmicBot.Models;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
 namespace CosmicBot.BotCommands
 {
+    [RequireUserPermission(GuildPermission.Administrator)]
+    [Group("settings", "Guild Setting Commands")]
     public class SettingsCommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly DataContext _context;
@@ -14,9 +17,8 @@ namespace CosmicBot.BotCommands
             _context = context;
         }
 
-        #region Reddit Server Commands
 
-        [SlashCommand("settimezone", "Choose a timezone for scheduled tasks to go off of (Default UTC +0)")]
+        [SlashCommand("timezone", "Choose a timezone for scheduled tasks to go off of (Default UTC +0)")]
         public async Task SetTimezone(TimeZoneEnum timezone)
         {
             if (!UserIsMod(Context.User))
@@ -30,8 +32,6 @@ namespace CosmicBot.BotCommands
             
             await RespondAsync($"Timezone updated to {timezoneStr}", ephemeral: true);
         }
-
-        #endregion
 
         private static bool UserIsMod(SocketUser user)
         {
@@ -59,14 +59,6 @@ namespace CosmicBot.BotCommands
                 _context.GuildSettings.Update(setting);
             }
             await _context.SaveChangesAsync();
-        }
-
-        private static Guid StrToGuid(string? str)
-        {
-            if (str == null)
-                return Guid.Empty;
-
-            return Guid.TryParse(str, out Guid result) ? result : Guid.Empty;
         }
     }
 }

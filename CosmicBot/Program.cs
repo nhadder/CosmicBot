@@ -2,6 +2,7 @@
 using CosmicBot.DAL;
 using CosmicBot.Service;
 using Discord;
+using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Data.SqlClient;
@@ -52,9 +53,13 @@ namespace CosmicBot
                     .AddSingleton<DiscordSocketClient>()
                     .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>(), _interactionServiceConfig))
                     .AddSingleton<DiscordBotService>()
-                    .AddSingleton<MinecraftCommandModule>()
+                    .AddSingleton<MinecraftListCommandModule>()
+                    .AddSingleton<MinecraftServerCommandModule>()
+                    .AddSingleton<MinecraftTaskCommandModule>()
+                    .AddSingleton<MinecraftWhitelistCommandModule>()
                     .AddSingleton<RedditCommandModule>()
                     .AddSingleton<SettingsCommandModule>()
+                    .AddSingleton<LoggingService>()
                     .AddHostedService<SchedulerService>();
                 })
                 .Build();
@@ -70,19 +75,12 @@ namespace CosmicBot
                 catch (Exception ex)
                 {
                     Console.WriteLine($"An error occurred while migrating the database.\n{ex.Message}\n{ex.StackTrace}");
+                    return;
                 }
             }
 
-            var client = host.Services.GetRequiredService<DiscordSocketClient>();
-            client.Log += LogAsync;
-
             var discordBotService = host.Services.GetRequiredService<DiscordBotService>();
             await discordBotService.InitializeAsync();
-
-            var configuration = host.Services.GetRequiredService<IConfiguration>();
-
-            await client.LoginAsync(TokenType.Bot, configuration["DISCORD_BOT_TOKEN"]);
-            await client.StartAsync();
 
             if (Environment.GetCommandLineArgs().Any(arg => arg.Contains("ef")))
                 return;
@@ -101,11 +99,5 @@ namespace CosmicBot
         };
 
         private static readonly InteractionServiceConfig _interactionServiceConfig = new();
-
-        private static Task LogAsync(LogMessage message)
-        {
-            Console.WriteLine(message.ToString());
-            return Task.CompletedTask;
-        }
     }
 }
