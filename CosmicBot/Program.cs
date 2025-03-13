@@ -2,7 +2,6 @@
 using CosmicBot.DAL;
 using CosmicBot.Service;
 using Discord;
-using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Data.SqlClient;
@@ -48,18 +47,33 @@ namespace CosmicBot
 
                         options.UseSqlServer(connectionString);
                     })
+                    //Discord Services
                     .AddSingleton(_socketConfig)
-                    .AddSingleton(_interactionServiceConfig)
                     .AddSingleton<DiscordSocketClient>()
-                    .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>(), _interactionServiceConfig))
-                    .AddSingleton<DiscordBotService>()
-                    .AddSingleton<MinecraftListCommandModule>()
-                    .AddSingleton<MinecraftServerCommandModule>()
-                    .AddSingleton<MinecraftTaskCommandModule>()
-                    .AddSingleton<MinecraftWhitelistCommandModule>()
-                    .AddSingleton<RedditCommandModule>()
-                    .AddSingleton<SettingsCommandModule>()
-                    .AddSingleton<LoggingService>()
+                    .AddSingleton<DiscordBotService>( sp =>
+                    {
+                        var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+                        var scope = scopeFactory.CreateScope();
+                        var socketClient = sp.GetRequiredService<DiscordSocketClient>();
+                        var interactionService = new InteractionService(socketClient, _interactionServiceConfig);
+                        return new DiscordBotService(socketClient,
+                            interactionService,
+                            scope.ServiceProvider,
+                            scope.ServiceProvider.GetRequiredService<IConfiguration>());
+                    })
+                    // Domain Services
+                    .AddScoped<RedditService>()
+                    .AddScoped<MinecraftServerService>()
+                    .AddScoped<GuildSettingsService>()
+                    .AddScoped<PlayerService>()
+                    //Command Modules
+                    .AddScoped<MinecraftListCommandModule>()
+                    .AddScoped<MinecraftServerCommandModule>()
+                    .AddScoped<MinecraftTaskCommandModule>()
+                    .AddScoped<MinecraftWhitelistCommandModule>()
+                    .AddScoped<RedditCommandModule>()
+                    .AddScoped<SettingsCommandModule>()
+                    //Hosted Services
                     .AddHostedService<SchedulerService>();
                 })
                 .Build();

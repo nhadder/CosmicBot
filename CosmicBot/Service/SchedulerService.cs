@@ -1,7 +1,6 @@
 ﻿using CosmicBot.DAL;
-using CosmicBot.Helpers;
+using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -18,42 +17,51 @@ namespace CosmicBot.Service
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            Console.WriteLine($"Scheduler service started");
+            await LoggingService.LogAsync("Scheduler service started");
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    var discordClient = scope.ServiceProvider.GetRequiredService<DiscordSocketClient>();
-                    await HandleMinecraftScheduledTasks(context, cancellationToken);
-                    await HandleRedditPostTasks(context, discordClient, cancellationToken);
+                    var socketClient = scope.ServiceProvider.GetRequiredService<DiscordSocketClient>();
+
+                    var minecraftService = new MinecraftServerService(context);
+                    var redditService = new RedditService(context);
+                    var guildSettingsService = new GuildSettingsService(context);
+
+                    await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
+                    await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
                 }
                     Thread.Sleep(TimeSpan.FromMinutes(1));
             }
         }
 
-        private async Task HandleRedditPostTasks(DataContext context, DiscordSocketClient discordClient, CancellationToken cancellationToken)
+        private static async Task HandleRedditPostTasks(RedditService redditService, GuildSettingsService guildSettings, DiscordSocketClient socketClient, CancellationToken cancellationToken)
         {
-            var posts = await context.RedditAutoPosts.AsNoTracking().ToListAsync(cancellationToken);
+            var posts = await redditService.GetAllAutoPosts();
 
             foreach (var post in posts)
             {
-                var guildTime = GetGuildTime(context, post.GuildId);
+                var guildTime = guildSettings.GetGuildTime(post.GuildId);
                 if (post.LastRan == null)
                 {
                     post.LastRan = GetLastRanIfNull(guildTime, post.StartTime, post.Interval);
-                    context.RedditAutoPosts.Update(post);
-                    await context.SaveChangesAsync(cancellationToken);
+                    await redditService.UpdateAutoPost(post);
                 }
 
                 if (CheckTask(guildTime, post.LastRan, post.StartTime, post.Interval))
                 {
-                    Console.WriteLine($"Running scheduled task: Reddit auto post {post.Subreddit} now at {guildTime}");
-                    await RedditApiService.PostTop(post.Subreddit, post.ChannelId, discordClient);
+                    await LoggingService.LogAsync($"Running scheduled task: Reddit auto post {post.Subreddit} now at {guildTime}");
+                    
+                    var response = await redditService.PostTop(post.Subreddit);
+                    var channel = socketClient.GetChannel(post.ChannelId) as IMessageChannel;
+
+                    if(channel != null)
+                        await channel.SendMessageAsync(response.Text, embed: response.Embed);
 
                     post.LastRan = guildTime;
-                    context.Update(post);
-                    await context.SaveChangesAsync(cancellationToken);
+                    await redditService.UpdateAutoPost(post);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -61,39 +69,34 @@ namespace CosmicBot.Service
             }
         }
 
-        private async Task HandleMinecraftScheduledTasks(DataContext context, CancellationToken cancellationToken)
+        private static async Task HandleMinecraftScheduledTasks(MinecraftServerService minecraftService, GuildSettingsService guildSettings, CancellationToken cancellationToken)
         {
-            var tasks = await context.MinecraftScheduledTasks.AsNoTracking().ToListAsync(cancellationToken);
+            var tasks = await minecraftService.GetAllTasks();
 
             foreach (var task in tasks)
             {
-                var server = context.MinecraftServers.FirstOrDefault(s => s.ServerId == task.ServerId);
+                var server = await minecraftService.GetServerById(task.ServerId);
 
                 if (server == null)
                     continue;
 
-                var guildTime = GetGuildTime(context, server.GuildId);
+                var guildTime = guildSettings.GetGuildTime(server.GuildId);
                 if (task.LastRan == null)
                 {
                     task.LastRan = GetLastRanIfNull(guildTime, task.StartTime, task.Interval);
-                    context.MinecraftScheduledTasks.Update(task);
-                    await context.SaveChangesAsync(cancellationToken);
+                    await minecraftService.UpdateTask(task);
                 }
                 
                 if (CheckTask(guildTime, task.LastRan, task.StartTime, task.Interval))
                 {
-                    Console.WriteLine($"Running scheduled task: {task.Name} now at {guildTime}");
-                    var commands = await context.MinecraftCommands.Where(c => c.ScheduledTaskId == task.ScheduledTaskId).ToListAsync();
+                    await LoggingService.LogAsync($"Running scheduled task: {task.Name} now at {guildTime}");
 
+                    var commands = await minecraftService.GetCommands(task.ScheduledTaskId);
                     if (commands.Count > 0)
-                    {
-                        var service = new MinecraftServerService(server);
-                        await service.SendCommands(commands);
-                    }
+                        await minecraftService.SendCommands(server.ServerId, commands);
 
                     task.LastRan = guildTime;
-                    context.Update(task);
-                    await context.SaveChangesAsync(cancellationToken);
+                    await minecraftService.UpdateTask(task);
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -131,19 +134,9 @@ namespace CosmicBot.Service
             return guildTime >= nextScheduled;
         }
 
-        private static DateTime GetGuildTime(DataContext context, ulong guildId)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            var timeZoneSetting = context.GuildSettings.FirstOrDefault(s => s.GuildId == guildId && s.SettingKey == "Timezone");
-            if (timeZoneSetting != null)
-                return TimeZoneHelper.GetGuildTimeNow(timeZoneSetting.SettingValue);
-            return DateTime.UtcNow;
-                
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            Console.WriteLine($"Scheduler service stopped");
-            return Task.CompletedTask;
+            await LoggingService.LogAsync("Scheduler service stopped");
         }
     }
 }

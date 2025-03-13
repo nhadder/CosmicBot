@@ -3,12 +3,9 @@ using Discord;
 
 namespace CosmicBot.Service
 {
-    public class LoggingService
+    public static class LoggingService
     {
-        public LoggingService()
-        {
-        }
-        public Task LogAsync(LogMessage message)
+        public static Task LogAsync(LogMessage message)
         {
             if (message.Exception is CommandException cmdException)
             {
@@ -19,6 +16,12 @@ namespace CosmicBot.Service
             else
                 Console.WriteLine($"[General/{message.Severity}] {message}");
 
+            return Task.CompletedTask;
+        }
+
+        public static Task LogAsync(string message)
+        {
+            Console.WriteLine($"[General/Info] {DateTime.Now.ToShortTimeString()} {message}");
             return Task.CompletedTask;
         }
     }
