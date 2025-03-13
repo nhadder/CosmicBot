@@ -72,6 +72,8 @@ namespace CosmicBot
                     .AddScoped<MinecraftTaskCommandModule>()
                     .AddScoped<MinecraftWhitelistCommandModule>()
                     .AddScoped<RedditCommandModule>()
+                    .AddScoped<RedditAutopostCommandModule>()
+                    .AddScoped<PlayerGameCommandModule>()
                     .AddScoped<SettingsCommandModule>()
                     //Hosted Services
                     .AddHostedService<SchedulerService>();
