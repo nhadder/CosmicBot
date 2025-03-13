@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -13,28 +12,25 @@ namespace CosmicBot.Service
         private readonly InteractionService _handler;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
-        private readonly LoggingService _loggingService;
 
         public DiscordBotService(DiscordSocketClient client, 
-            InteractionService handler, 
+            InteractionService handler,
             IServiceProvider services, 
-            IConfiguration configuration,
-            LoggingService loggingService)
+            IConfiguration configuration)
         {
             _client = client;
             _handler = handler;
             _services = services;
             _configuration = configuration;
-            _loggingService = loggingService;
         }
 
         public async Task InitializeAsync()
         {
             await _handler.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             _handler.InteractionExecuted += HandleInteractionExecute;
-            _handler.Log += _loggingService.LogAsync;
+            _handler.Log += LoggingService.LogAsync;
 
-            _client.Log += _loggingService.LogAsync;
+            _client.Log += LoggingService.LogAsync;
             _client.Ready += ReadyAsync;
             _client.InteractionCreated += HandleInteraction;
 
@@ -73,7 +69,7 @@ namespace CosmicBot.Service
             }
         }
 
-        private Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, Discord.Interactions.IResult result)
+        private Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, IResult result)
         {
             if (!result.IsSuccess)
                 switch (result.Error)
