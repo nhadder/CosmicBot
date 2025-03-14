@@ -1,5 +1,6 @@
-﻿using CosmicBot.BotCommands;
+﻿using CosmicBot.Commands;
 using CosmicBot.DAL;
+using CosmicBot.Helpers;
 using CosmicBot.Service;
 using Discord;
 using Discord.Interactions;
@@ -75,6 +76,8 @@ namespace CosmicBot
                     .AddScoped<RedditAutopostCommandModule>()
                     .AddScoped<PlayerGameCommandModule>()
                     .AddScoped<SettingsCommandModule>()
+                    .AddScoped<PagedListInteractionModule>()
+                    .AddScoped<GameInteractionModule>()
                     //Hosted Services
                     .AddHostedService<SchedulerService>();
                 })
@@ -90,7 +93,7 @@ namespace CosmicBot
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An error occurred while migrating the database.\n{ex.Message}\n{ex.StackTrace}");
+                    Logger.Log($"An error occurred while migrating the database.\n{ex.Message}\n{ex.StackTrace}");
                     return;
                 }
             }

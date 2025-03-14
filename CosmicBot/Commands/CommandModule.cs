@@ -1,7 +1,7 @@
 ﻿using CosmicBot.DiscordResponse;
 using Discord.Interactions;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
     public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     {

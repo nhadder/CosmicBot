@@ -2,7 +2,7 @@
 using Discord;
 using CosmicBot.Service;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
     [Group("whitelist", "Minecraft Server")]
     public class MinecraftWhitelistCommandModule : CommandModule
@@ -19,7 +19,7 @@ namespace CosmicBot.BotCommands
             await Respond(await _service.WhitelistAdd(Context.Guild.Id, username));
         }
 
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [DefaultMemberPermissions(GuildPermission.Administrator)]
         [SlashCommand("remove", "Remove a username from the whitelist")]
         public async Task WhitelistRemove(string username)
         {

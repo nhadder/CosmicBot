@@ -2,9 +2,9 @@
 using Discord;
 using Discord.Interactions;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
-    [RequireUserPermission(GuildPermission.Administrator)]
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [Group("tasks", "Minecraft Server Tasks")]
     public class MinecraftTaskCommandModule : CommandModule
     {

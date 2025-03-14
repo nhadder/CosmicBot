@@ -9,6 +9,7 @@ namespace CosmicBot.DiscordResponse
         private readonly List<string> _items;
         private readonly int _pageSize;
         private int _currentPage = 0;
+        public DateTime Expires { get; set; } = DateTime.UtcNow.AddMinutes(1);
 
         public string Title { get; set; }
 
@@ -57,6 +58,8 @@ namespace CosmicBot.DiscordResponse
 
         public async Task HandleButtonAsync(SocketMessageComponent component)
         {
+            Expires = DateTime.UtcNow.AddMinutes(1);
+
             if (component.Data.CustomId.StartsWith("page_prev"))
                 _currentPage--;
             else if (component.Data.CustomId.StartsWith("page_next"))

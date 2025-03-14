@@ -1,4 +1,5 @@
 ﻿using CosmicBot.DAL;
+using CosmicBot.Helpers;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ namespace CosmicBot.Service
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await LoggingService.LogAsync("Scheduler service started");
+            Logger.Log("Scheduler service started");
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -52,7 +53,7 @@ namespace CosmicBot.Service
 
                 if (CheckTask(guildTime, post.LastRan, post.StartTime, post.Interval))
                 {
-                    await LoggingService.LogAsync($"Running scheduled task: Reddit auto post {post.Subreddit} now at {guildTime}");
+                    Logger.Log($"Running scheduled task: Reddit auto post {post.Subreddit} now at {guildTime}");
                     
                     var response = await redditService.PostTop(post.Subreddit);
                     var channel = socketClient.GetChannel(post.ChannelId) as IMessageChannel;
@@ -89,7 +90,7 @@ namespace CosmicBot.Service
                 
                 if (CheckTask(guildTime, task.LastRan, task.StartTime, task.Interval))
                 {
-                    await LoggingService.LogAsync($"Running scheduled task: {task.Name} now at {guildTime}");
+                    Logger.Log($"Running scheduled task: {task.Name} now at {guildTime}");
 
                     var commands = await minecraftService.GetCommands(task.ScheduledTaskId);
                     if (commands.Count > 0)
@@ -136,7 +137,7 @@ namespace CosmicBot.Service
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await LoggingService.LogAsync("Scheduler service stopped");
+            await Logger.LogAsync("Scheduler service stopped");
         }
     }
 }

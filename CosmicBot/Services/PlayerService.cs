@@ -19,7 +19,7 @@ namespace CosmicBot.Service
 
         public async Task<PlayerStats> GetPlayerStatsAsync(ulong guildId, ulong userId)
         {
-            var playerStats = _context.PlayerStats.FirstOrDefault(p => p.UserId == userId);
+            var playerStats = _context.PlayerStats.FirstOrDefault(p => p.GuildId == guildId && p.UserId == userId);
             if (playerStats is null)
             {
                 playerStats = new PlayerStats { UserId = userId, GuildId = guildId };
@@ -67,7 +67,7 @@ namespace CosmicBot.Service
                 var player = playersInGuild[i];
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
                 var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
-                var nameLevel = $"{i}. {name} (Lvl.{player.Level})";
+                var nameLevel = $"{i+1}. {name} (Lvl.{player.Level})";
                 nameLevel = nameLevel.PadRight(20);
                 var stars = $"{player.Points} stars";
                 stars = stars.PadLeft(15);
@@ -81,12 +81,31 @@ namespace CosmicBot.Service
             var playerStats = await GetPlayerStatsAsync(guildId, user.Id);
             var playerCard = new EmbedBuilder()
                 .WithThumbnailUrl(user.GetDisplayAvatarUrl())
-                .WithTitle(user.GlobalName)
-                .WithDescription($"Lvl: {playerStats.Level}  (XP {playerStats.Experience} / {GetXpForLevel(playerStats.Level)})\nStars: {playerStats.Points}\nGames Won: {playerStats.GamesWon}\nGames Lost: {playerStats.GamesLost}")
-                .WithAuthor(user)
+                .WithDescription($"**Level:** {playerStats.Level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(playerStats.Level)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
+                .WithAuthor(new EmbedAuthorBuilder().WithName(user.GlobalName).WithIconUrl(user.GetAvatarUrl()))
                 .Build();
 
             return new MessageResponse(embed: playerCard);
+        }
+
+        public async Task Award(ulong guildId, ulong userId, long points = 0, long xp = 0, int gamesWon = 0, int gamesLost = 0)
+        {
+            var player = await GetPlayerStatsAsync(guildId, userId);
+            if (player != null)
+            {
+                player.Points += points;
+                player.Experience += xp;
+                player.GamesWon += gamesWon;
+                player.GamesLost += gamesLost;
+
+                player.Level = GetLevelFromXp(player.Experience);
+
+                if (player.Points < 0)
+                    player.Points = 0;
+
+                _context.Update(player);
+                await _context.SaveChangesAsync();
+            }
         }
 
         private static int GetLevelFromXp(long experience)

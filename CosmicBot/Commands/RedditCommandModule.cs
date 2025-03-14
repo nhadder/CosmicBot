@@ -1,7 +1,7 @@
 ﻿using CosmicBot.Service;
 using Discord.Interactions;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
     [Group("reddit", "Reddit Commands")]
     public class RedditCommandModule : CommandModule

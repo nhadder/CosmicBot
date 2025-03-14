@@ -2,9 +2,9 @@
 using Discord;
 using Discord.Interactions;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
-    [RequireUserPermission(GuildPermission.Administrator)]
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [Group("autopost", "Reddit Commands")]
     public class RedditAutopostCommandModule : CommandModule
     {
