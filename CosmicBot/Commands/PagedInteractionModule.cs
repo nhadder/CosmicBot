@@ -2,7 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
     public class PagedListInteractionModule : InteractionModuleBase<SocketInteractionContext>
     {
@@ -12,7 +12,16 @@ namespace CosmicBot.BotCommands
             var interactionContext = Context.Interaction as SocketMessageComponent;
             if (interactionContext != null)
                 if (PagedMessageStore.TryGetMessage(interactionContext.Message.Id, out var pagedList))
+                {
+                    if (pagedList == null)
+                        return;
+
                     await pagedList.HandleButtonAsync(interactionContext);
+                }
+                else
+                {
+                    await RespondAsync("That message component has expired", ephemeral: true);
+                }
         }
     }
 }

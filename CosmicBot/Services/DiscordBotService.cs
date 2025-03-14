@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CosmicBot.Helpers;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -28,9 +29,9 @@ namespace CosmicBot.Service
         {
             await _handler.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             _handler.InteractionExecuted += HandleInteractionExecute;
-            _handler.Log += LoggingService.LogAsync;
+            _handler.Log += Logger.LogAsync;
 
-            _client.Log += LoggingService.LogAsync;
+            _client.Log += Logger.LogAsync;
             _client.Ready += ReadyAsync;
             _client.InteractionCreated += HandleInteraction;
 
@@ -54,35 +55,33 @@ namespace CosmicBot.Service
                     switch (result.Error)
                     {
                         case InteractionCommandError.UnmetPrecondition:
-                            Console.WriteLine($"Unmet Precondition {result.ErrorReason}");
+                            Logger.Log($"Unmet Precondition {result.ErrorReason}");
                             break;
                         default:
-                            Console.WriteLine($"Other error: {result.ErrorReason}");
+                            Logger.Log($"Other error: {result.ErrorReason}");
                             break;
                     }
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"Exception occured: {ex.Message}\n{ex.StackTrace}");
+                Logger.Log($"Exception occured: {ex.Message}\n{ex.StackTrace}");
                 if (interaction.Type is InteractionType.ApplicationCommand)
                     await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             }
         }
 
-        private Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, IResult result)
+        private async Task HandleInteractionExecute(ICommandInfo commandInfo, IInteractionContext context, IResult result)
         {
             if (!result.IsSuccess)
                 switch (result.Error)
                 {
                     case InteractionCommandError.UnmetPrecondition:
-                        Console.WriteLine($"Unmet Precondition {result.ErrorReason}");
+                        await Logger.LogAsync($"Unmet Precondition {result.ErrorReason}");
                         break;
                     default:
-                        Console.WriteLine($"Unknown error: {result.ErrorReason}");
+                        await Logger.LogAsync($"Unknown error: {result.ErrorReason}");
                         break;
                 }
-
-            return Task.CompletedTask;
         }
     }
 }

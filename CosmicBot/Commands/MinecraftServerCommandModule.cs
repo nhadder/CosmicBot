@@ -3,9 +3,9 @@ using Discord.Interactions;
 using Discord;
 using CosmicBot.Service;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
-    [RequireUserPermission(GuildPermission.Administrator)]
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [Group("server", "Minecraft Server")]
     public class MinecraftServerCommandModule : CommandModule
     {

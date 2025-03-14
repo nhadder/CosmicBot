@@ -3,9 +3,9 @@ using CosmicBot.Service;
 using Discord;
 using Discord.Interactions;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
-    [RequireUserPermission(GuildPermission.Administrator)]
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [Group("settings", "Guild Setting Commands")]
     public class SettingsCommandModule : CommandModule
     {

@@ -1,8 +1,8 @@
 ﻿using Discord.Interactions;
 using CosmicBot.Service;
-using Discord;
+using CosmicBot.DiscordResponse;
 
-namespace CosmicBot.BotCommands
+namespace CosmicBot.Commands
 {
     public class PlayerGameCommandModule : CommandModule
     {
@@ -29,6 +29,16 @@ namespace CosmicBot.BotCommands
         public async Task Stats()
         {
             await Respond(await _playerService.StatCard(Context.Guild.Id, Context.User));
+        }
+
+        [SlashCommand("blackjack", "Play a game of blackjack")]
+        public async Task Blackjack(int bet)
+        {
+            var player = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, Context.User.Id);
+            if (player.Points < bet)
+                await Respond(new MessageResponse("You do not have enough points for that bet", ephemeral: true));
+
+            await new BlackjackEmbed(Context.User.Id, bet).SendAsync(Context);
         }
     }
 }

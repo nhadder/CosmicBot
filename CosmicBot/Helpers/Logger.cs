@@ -1,11 +1,23 @@
 ﻿using Discord.Commands;
 using Discord;
 
-namespace CosmicBot.Service
+namespace CosmicBot.Helpers
 {
-    public static class LoggingService
+    public static class Logger
     {
         public static Task LogAsync(LogMessage message)
+        {
+            Log(message);
+            return Task.CompletedTask;
+        }
+
+        public static Task LogAsync(string message)
+        {
+            Log(message);
+            return Task.CompletedTask;
+        }
+
+        public static void Log(LogMessage message)
         {
             if (message.Exception is CommandException cmdException)
             {
@@ -15,14 +27,11 @@ namespace CosmicBot.Service
             }
             else
                 Console.WriteLine($"[General/{message.Severity}] {message}");
-
-            return Task.CompletedTask;
         }
 
-        public static Task LogAsync(string message)
+        public static void Log(string message)
         {
             Console.WriteLine($"[General/Info] {DateTime.Now.ToShortTimeString()} {message}");
-            return Task.CompletedTask;
         }
     }
 }
