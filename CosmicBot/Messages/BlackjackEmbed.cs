@@ -114,7 +114,7 @@ namespace CosmicBot.DiscordResponse
 
             var result = string.Empty;
             if (Status == GameStatus.Won)
-                result = $"You won! You gained **{Bet}** stars !";
+                result = $"You won! You gained **{Bet}** stars!";
             if (Status == GameStatus.Lost)
                 result = $"You lose! You lost **{Bet}** stars!";
             if (Status == GameStatus.Tie)
