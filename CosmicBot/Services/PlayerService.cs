@@ -67,11 +67,9 @@ namespace CosmicBot.Service
                 var player = playersInGuild[i];
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
                 var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
-                var nameLevel = $"{i+1}. {name} (Lvl.{player.Level})";
-                nameLevel = nameLevel.PadRight(20);
                 var stars = $"{player.Points} stars";
-                stars = stars.PadLeft(15);
-                playerStats.Add($"{nameLevel} {stars}");
+                stars = stars.PadRight(20);
+                playerStats.Add($"{i+1}. {stars} {name}");
             }
             return new PagedListEmbed(playerStats, 10, "Leaderboard");
         }
