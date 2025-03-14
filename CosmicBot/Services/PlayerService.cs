@@ -34,16 +34,15 @@ namespace CosmicBot.Service
         {
             var player = await GetPlayerStatsAsync(guildId, userId);
             var guildTimeNow = _guildSettings.GetGuildTime(guildId);
-
-            if (player.LastDaily != null && player.LastDaily - guildTimeNow < TimeSpan.FromDays(-1))
+            if (player.LastDaily != null && guildTimeNow - player.LastDaily < TimeSpan.FromDays(1))
             {
-                var timeLeft = (DateTime)player.LastDaily - guildTimeNow;
+                var timeLeft = TimeSpan.FromDays(1) - (guildTimeNow - (DateTime)player.LastDaily);
                 var sb = new StringBuilder();
-                if (timeLeft.Hours < 0)
-                    sb.Append($"{-timeLeft.Hours} hours ");
-                if(timeLeft.Minutes < 0)
-                    sb.Append($"{-timeLeft.Minutes} minutes ");
-                sb.Append($"{-timeLeft.Seconds} seconds left.");
+                if (timeLeft.Hours > 0)
+                    sb.Append($"{timeLeft.Hours} hours ");
+                if(timeLeft.Minutes > 0)
+                    sb.Append($"{timeLeft.Minutes} minutes ");
+                sb.Append($"{timeLeft.Seconds} seconds left.");
                 return new MessageResponse($"You have already claimed your daily reward today! {sb}", ephemeral: true);
             }
 
