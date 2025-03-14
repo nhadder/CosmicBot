@@ -54,12 +54,19 @@ namespace CosmicBot.Service
                 if (CheckTask(guildTime, post.LastRan, post.StartTime, post.Interval))
                 {
                     Logger.Log($"Running scheduled task: Reddit auto post {post.Subreddit} now at {guildTime}");
-                    
-                    var response = await redditService.PostTop(post.Subreddit);
-                    var channel = socketClient.GetChannel(post.ChannelId) as IMessageChannel;
 
-                    if(channel != null)
-                        await channel.SendMessageAsync(response.Text, embed: response.Embed);
+                    try
+                    {
+                        var response = await redditService.PostTop(post.Subreddit);
+                        var channel = socketClient.GetChannel(post.ChannelId) as IMessageChannel;
+
+                        if (channel != null)
+                            await channel.SendMessageAsync(response.Text, embed: response.Embed);
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.Log($"Exception occured: {ex.Message}\n{ex.StackTrace}");
+                    }
 
                     post.LastRan = guildTime;
                     await redditService.UpdateAutoPost(post);
@@ -92,9 +99,16 @@ namespace CosmicBot.Service
                 {
                     Logger.Log($"Running scheduled task: {task.Name} now at {guildTime}");
 
-                    var commands = await minecraftService.GetCommands(task.ScheduledTaskId);
-                    if (commands.Count > 0)
-                        await minecraftService.SendCommands(server.ServerId, commands);
+                    try
+                    {
+                        var commands = await minecraftService.GetCommands(task.ScheduledTaskId);
+                        if (commands.Count > 0)
+                            await minecraftService.SendCommands(server.ServerId, commands);
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.Log($"Exception occured: {ex.Message}\n{ex.StackTrace}");
+                    }
 
                     task.LastRan = guildTime;
                     await minecraftService.UpdateTask(task);
