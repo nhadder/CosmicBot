@@ -38,8 +38,6 @@ namespace CosmicBot.Models
                     str = "Q"; break;
                 case PlayingCardNumber.King:
                     str = "K"; break;
-                case PlayingCardNumber.Empty:
-                    str = "?"; break;
             }
 
             switch(Suit)
