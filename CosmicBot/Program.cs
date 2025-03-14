@@ -51,7 +51,7 @@ namespace CosmicBot
                     //Discord Services
                     .AddSingleton(_socketConfig)
                     .AddSingleton<DiscordSocketClient>()
-                    .AddSingleton<DiscordBotService>( sp =>
+                    .AddSingleton( sp =>
                     {
                         var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
                         var scope = scopeFactory.CreateScope();
@@ -76,8 +76,7 @@ namespace CosmicBot
                     .AddScoped<RedditAutopostCommandModule>()
                     .AddScoped<PlayerGameCommandModule>()
                     .AddScoped<SettingsCommandModule>()
-                    .AddScoped<PagedListInteractionModule>()
-                    .AddScoped<GameInteractionModule>()
+                    .AddScoped<EmbedMessageInteractionModule>()
                     //Hosted Services
                     .AddHostedService<SchedulerService>();
                 })

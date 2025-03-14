@@ -1,6 +1,7 @@
 ﻿using Discord.Interactions;
 using CosmicBot.Service;
 using CosmicBot.DiscordResponse;
+using CosmicBot.Messages.Components;
 
 namespace CosmicBot.Commands
 {
@@ -21,8 +22,8 @@ namespace CosmicBot.Commands
         [SlashCommand("leaderboard", "Show the star leadboard of the guild")]
         public async Task Leaderboard()
         {
-            var pagedList = await _playerService.Leaderboard(Context.Guild.Id, Context);
-            await pagedList.SendAsync(Context);
+            var playerStats = await _playerService.Leaderboard(Context.Guild.Id, Context);
+            await new PagedList(playerStats, 10, "Leaderboard").SendAsync(Context);
         }
 
         [SlashCommand("stats", "Show the star leadboard of the guild")]
@@ -36,9 +37,12 @@ namespace CosmicBot.Commands
         {
             var player = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, Context.User.Id);
             if (player.Points < bet)
+            {
                 await Respond(new MessageResponse("You do not have enough points for that bet", ephemeral: true));
+                return;
+            }
 
-            await new BlackjackEmbed(Context.User.Id, bet).SendAsync(Context);
+            await new Blackjack(Context, bet).SendAsync(Context);
         }
     }
 }
