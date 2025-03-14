@@ -3,6 +3,7 @@ using CosmicBot.Models;
 using CosmicBot.DiscordResponse;
 using Microsoft.EntityFrameworkCore;
 using Discord;
+using System.Text;
 
 namespace CosmicBot.Service
 {
@@ -34,8 +35,15 @@ namespace CosmicBot.Service
             var player = await GetPlayerStatsAsync(guildId, userId);
             var guildTimeNow = _guildSettings.GetGuildTime(guildId);
 
-            if (guildTimeNow - player.LastDaily < TimeSpan.FromDays(1))
-                return new MessageResponse("You have already claimed your daily reward today!", ephemeral: true);
+            if (player.LastDaily != null && guildTimeNow - player.LastDaily < TimeSpan.FromDays(1))
+            {
+                var timeLeft = guildTimeNow - (DateTime)player.LastDaily;
+                var sb = new StringBuilder();
+                if(timeLeft.Minutes > 0)
+                    sb.Append($"{timeLeft.Minutes} minutes ");
+                sb.Append($"{timeLeft.Seconds} seconds left.");
+                return new MessageResponse($"You have already claimed your daily reward today! {sb}", ephemeral: true);
+            }
 
             var rng = new Random();
             var pointsEarned = Convert.ToInt64(Math.Floor((rng.NextDouble()*50 + 50) * player.Level));
