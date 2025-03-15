@@ -1,4 +1,5 @@
-﻿using CosmicBot.Service;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Service;
 using Discord.Interactions;
 
 namespace CosmicBot.Commands
@@ -14,6 +15,12 @@ namespace CosmicBot.Commands
         [SlashCommand("list", "Lists players on servers")]
         public async Task List()
         {
+            if (!HasChannelPermissions())
+            {
+                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                return;
+            }
+
             await Respond(await _service.ListPlayers(Context.Guild.Id));
         }
     }
