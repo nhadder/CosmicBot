@@ -5,6 +5,8 @@
         InProgress,
         Won,
         Lost,
-        Tie
+        Tie,
+        Pending,
+        Rejected
     }
 }

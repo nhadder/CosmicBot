@@ -27,7 +27,7 @@ namespace CosmicBot.Messages.Components
             _userCards = DealCards(2);
             _dealerCards = DealCards(1);
 
-            var hitButton = new MessageButton("Ht", ButtonStyle.Success);
+            var hitButton = new MessageButton("Hit", ButtonStyle.Success);
             hitButton.OnPress += Hit;
             Buttons.Add(hitButton);
 
@@ -47,7 +47,7 @@ namespace CosmicBot.Messages.Components
             return embedBuilder.Build();
         }
 
-        private async Task Hit()
+        private async Task Hit(IInteractionContext? context = null)
         {
             _userCards.AddRange(DealCards(1));
 
@@ -58,7 +58,7 @@ namespace CosmicBot.Messages.Components
                 await Stand();
         }
 
-        private Task Stand()
+        private Task Stand(IInteractionContext? context = null)
         {
             var dealerTotal = GetTotal(_dealerCards);
             while (dealerTotal < 17)

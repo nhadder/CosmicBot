@@ -46,14 +46,14 @@ namespace CosmicBot.Messages.Components
             _next.Disabled = _currentPage == _totalPages - 1;
         }
 
-        private Task Next()
+        private Task Next(IInteractionContext? context = null)
         {
             _currentPage++;
             DisableButtonsIfNecessary();
             return Task.CompletedTask;
         }
 
-        private Task Prev()
+        private Task Prev(IInteractionContext? context = null)
         {
             _currentPage--;
             DisableButtonsIfNecessary();
