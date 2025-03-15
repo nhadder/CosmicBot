@@ -1,6 +1,6 @@
 ﻿using CosmicBot.DiscordResponse;
+using Discord;
 using Discord.Interactions;
-using Microsoft.VisualBasic;
 
 namespace CosmicBot.Commands
 {
@@ -22,6 +22,23 @@ namespace CosmicBot.Commands
             }
             else
                 await Context.Interaction.DeferAsync();
+        }
+
+        public bool HasChannelPermissions()
+        {
+            if (Context.Guild == null || Context.Channel == null)
+                return false;
+
+            var botUser = Context.Guild.CurrentUser;
+            if (botUser == null)
+                return false;
+
+            if (Context.Channel is not IGuildChannel channel)
+                return false;
+
+            var botPermissions = botUser.GetPermissions(channel);
+
+            return botPermissions.Has(ChannelPermission.ViewChannel) && botPermissions.Has(ChannelPermission.SendMessages);
         }
     }
 }

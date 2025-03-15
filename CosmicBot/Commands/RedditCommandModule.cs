@@ -1,4 +1,5 @@
-﻿using CosmicBot.Service;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Service;
 using Discord.Interactions;
 
 namespace CosmicBot.Commands
@@ -15,6 +16,12 @@ namespace CosmicBot.Commands
         [SlashCommand("post", "Show a random image in a subreddit")]
         public async Task Post(string subreddit)
         {
+            if (!HasChannelPermissions())
+            {
+                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                return;
+            }
+
             await Respond(await _service.PostTop(subreddit));
         }
     }

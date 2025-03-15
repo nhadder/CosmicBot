@@ -320,13 +320,21 @@ namespace CosmicBot.Messages.Components
         private string GetGameWindow()
         {
             var sb = new StringBuilder();
-            if(Status == GameStatus.Pending)
+            if (Status == GameStatus.Pending)
             {
                 sb.AppendLine($"{_username} has challened {_player2Username}!");
                 sb.AppendLine("Game: Knucklebones");
                 sb.AppendLine($"Bet: {_bet} stars");
                 sb.AppendLine();
                 sb.AppendLine($"<@{_player2Id}>, do you accept?");
+            }
+            else if(Status == GameStatus.Rejected)
+            {
+                sb.AppendLine($"{_username} has challened {_player2Username}!");
+                sb.AppendLine("Game: Knucklebones");
+                sb.AppendLine($"Bet: {_bet} stars");
+                sb.AppendLine();
+                sb.AppendLine($"<@{_player2Id}> has rejected!");
             }
             else
             {
@@ -352,7 +360,7 @@ namespace CosmicBot.Messages.Components
                     result = $"{_username} won! They gained **{_bet}** stars and **20** XP!\n";
                     result += $"{_player2Username} lost. They lost **{_bet}** stars and gained **10** XP!";
                 }
-                
+
                 if (Status == GameStatus.Lost)
                 {
                     result = $"{_player2Username} won! They gained **{_bet}** stars and **20** XP!\n";
