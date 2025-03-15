@@ -76,7 +76,7 @@ namespace CosmicBot.Messages
             if (button != null)
             {
                 Expires = DateTime.UtcNow.AddMinutes(1);
-                await button.Press();
+                await button.Press(context);
                 await UpdateAsync(context);
             }
         }
