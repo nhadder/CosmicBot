@@ -37,15 +37,25 @@ namespace CosmicBot.Helpers
 
                     if (message.Awards.Count > 0)
                     {
+                        bool pointsLeft = true;
                         foreach (var award in message.Awards)
-                            await playerService.Award(context.Guild.Id,
+                        {
+                            pointsLeft = await playerService.Award(context.Guild.Id,
                                 award.UserId,
                                 award.Points,
                                 award.Experience,
                                 award.GamesWon,
                                 award.GamesLost);
+                        }
 
                         message.Awards.Clear();
+
+                        if(!pointsLeft)
+                        {
+                            await message.Expire(context.Client);
+                            RemoveMessage(messageComponent.Message.Id);
+                            return new MessageResponse("Not enough stars to play again...", ephemeral: true);
+                        }
                     }
                     
                     if(message.Expired)
