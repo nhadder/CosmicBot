@@ -8,12 +8,12 @@ namespace CosmicBot.Messages.Components
 {
     public class Blackjack : EmbedMessage
     {
-        private readonly List<PlayingCard> _dealerCards = [];
-        private readonly List<PlayingCard> _userCards = [];
+        private List<PlayingCard> _dealerCards = [];
+        private List<PlayingCard> _userCards = [];
         private readonly string _username;
         private readonly string _iconUrl;
         private readonly ulong _userId;
-        private GameStatus Status = GameStatus.InProgress;
+        private GameStatus Status;
         private readonly long _bet;
 
         public Blackjack(IInteractionContext context, long bet) : base([context.User.Id])
@@ -23,6 +23,15 @@ namespace CosmicBot.Messages.Components
             _userId = context.User.Id;
             _username = context.User.GlobalName;
             _iconUrl = context.User.GetAvatarUrl();
+
+            SetupGame();
+        }
+
+        private void SetupGame()
+        {
+            Status = GameStatus.InProgress;
+            _userCards.Clear();
+            _dealerCards.Clear();
 
             _userCards = DealCards(2);
             _dealerCards = DealCards(1);
@@ -45,6 +54,13 @@ namespace CosmicBot.Messages.Components
                 .WithFooter(_username);
 
             return embedBuilder.Build();
+        }
+
+        private Task PlayAgain(IInteractionContext? context = null)
+        {
+            Buttons.Clear();
+            SetupGame();
+            return Task.CompletedTask;
         }
 
         private async Task Hit(IInteractionContext? context = null)
@@ -89,7 +105,11 @@ namespace CosmicBot.Messages.Components
                 Awards.Add(new PlayerAward(_userId, 0, 10, 0, 0));
 
             Status = status;
-            Expired = true;
+
+            Buttons.Clear();
+            var tryAgainButton = new MessageButton("Play Again?", ButtonStyle.Secondary);
+            tryAgainButton.OnPress += PlayAgain;
+            Buttons.Add(tryAgainButton);
         }
 
         private string GetGameWindow()
@@ -124,6 +144,10 @@ namespace CosmicBot.Messages.Components
                 sb.AppendLine("**Result**");
                 sb.AppendLine(result);
             }
+
+            if (Expired)
+                sb.AppendLine("\nThis game has expired!");
+
             return sb.ToString();
         }
 

@@ -32,9 +32,12 @@ namespace CosmicBot.Messages.Components
         public override Embed GetEmbed()
         {
             var pagedItems = _items.Skip(_currentPage * _pageSize).Take(_pageSize);
+
+            var expiredMessage = Expired ? "\nThis message component has expired." : "";
+
             var embedBuilder = new EmbedBuilder()
                 .WithTitle(_title)
-                .WithDescription($"```{string.Join("\n", pagedItems)}```")
+                .WithDescription($"```{string.Join("\n", pagedItems)}```{expiredMessage}")
                 .WithFooter($"Page {_currentPage + 1} / {_totalPages}");
 
             return embedBuilder.Build();
