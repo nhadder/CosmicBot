@@ -33,6 +33,7 @@ namespace CosmicBot.Service
 
                     await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
                     await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
+                    await MessageStore.CheckForExpiredMessages(socketClient);
                 }
                     Thread.Sleep(TimeSpan.FromMinutes(1));
             }

@@ -8,8 +8,8 @@ namespace CosmicBot.Messages.Components
 {
     public class Knucklebones : EmbedMessage
     {
-        private readonly Dice?[] _player1Board = new Dice?[9];
-        private readonly Dice?[] _player2Board = new Dice?[9];
+        private Dice?[] _player1Board = new Dice?[9];
+        private Dice?[] _player2Board = new Dice?[9];
         private readonly string _username;
         private readonly string _player2Username;
         private readonly string _iconUrl;
@@ -44,6 +44,18 @@ namespace CosmicBot.Messages.Components
             var denyButton = new MessageButton("Deny", ButtonStyle.Danger);
             denyButton.OnPress += Deny;
             Buttons.Add(denyButton);
+        }
+
+        private Task PlayAgain(IInteractionContext? context = null)
+        {
+            Status = GameStatus.InProgress;
+            _player1Board = new Dice?[9];
+            _player2Board = new Dice?[9];
+            _turn = 1;
+            RollDice();
+            AddGameControls();
+
+            return Task.CompletedTask;
         }
 
         public override Embed GetEmbed()
@@ -267,7 +279,7 @@ namespace CosmicBot.Messages.Components
             return count;
         }
 
-        private bool IsColumnFull(Dice?[] board, int column)
+        private static bool IsColumnFull(Dice?[] board, int column)
         {
             var foundEmpty = false;
             for (var i = column * 3; i < 3 + (3 * column); i++)
@@ -301,7 +313,12 @@ namespace CosmicBot.Messages.Components
             }
 
             Status = status;
-            Expired = true;
+
+            Buttons.Clear();
+
+            var playAgainButton = new MessageButton("Play again?", ButtonStyle.Secondary);
+            playAgainButton.OnPress += PlayAgain;
+            Buttons.Add(playAgainButton);
         }
 
         private static bool HasOpenSlots(Dice?[] board)
@@ -338,14 +355,16 @@ namespace CosmicBot.Messages.Components
             }
             else
             {
-                sb.AppendLine($"```{_username}'s Board");
+                var yourTurn = _turn == 1 ? " - Your turn!" : "";
+                sb.AppendLine($"```{_username}'s Board{yourTurn}");
                 sb.AppendLine($"[{DiceStrValue(_player1Board[2])}] [{DiceStrValue(_player1Board[5])}] [{DiceStrValue(_player1Board[8])}]");
                 sb.Append($"[{DiceStrValue(_player1Board[1])}] [{DiceStrValue(_player1Board[4])}] [{DiceStrValue(_player1Board[7])}]");
                 sb.AppendLine($"   Total: {CalculateBoard(_player1Board)}");
                 sb.AppendLine($"[{DiceStrValue(_player1Board[0])}] [{DiceStrValue(_player1Board[3])}] [{DiceStrValue(_player1Board[6])}]");
                 sb.AppendLine($"{CalculateColumn(_player1Board, 0).ToString().PadLeft(3)} {CalculateColumn(_player1Board, 1).ToString().PadLeft(3)} {CalculateColumn(_player1Board, 2).ToString().PadLeft(3)}");
                 sb.AppendLine();
-                sb.AppendLine($"{_player2Username}'s Board");
+                yourTurn = _turn == 2 ? " - Your turn!" : "";
+                sb.AppendLine($"{_player2Username}'s Board{yourTurn}");
                 sb.AppendLine($"[{DiceStrValue(_player2Board[2])}] [{DiceStrValue(_player2Board[5])}] [{DiceStrValue(_player2Board[8])}]");
                 sb.Append($"[{DiceStrValue(_player2Board[1])}] [{DiceStrValue(_player2Board[4])}] [{DiceStrValue(_player2Board[7])}]");
                 sb.AppendLine($"   Total: {CalculateBoard(_player2Board)}");
@@ -374,8 +393,11 @@ namespace CosmicBot.Messages.Components
                     sb.AppendLine("**Result**");
                     sb.AppendLine(result);
                 }
-
             }
+
+            if (Expired)
+                sb.AppendLine("\nThis game has expired!");
+
             return sb.ToString();
         }   
     }

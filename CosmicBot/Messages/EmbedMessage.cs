@@ -18,7 +18,7 @@ namespace CosmicBot.Messages
 
         public EmbedMessage(List<ulong>? userParticipants = null)
         {
-            Expires = DateTime.UtcNow.AddMinutes(1);
+            Expires = DateTime.UtcNow.AddMinutes(2);
             Participants = userParticipants;
         }
         public abstract Embed GetEmbed();
@@ -32,10 +32,11 @@ namespace CosmicBot.Messages
                 builder.WithButton(button.Text, button.Id, button.Style, button.Emote, disabled: button.Disabled || Expired, row: button.Row);
             return builder.Build();
         }
-        public async Task Expire(IInteractionContext context)
+
+        public async Task Expire(IDiscordClient client)
         {
             Expired = true;
-            await UpdateAsync(context);
+            await UpdateAsync(client);
         }
 
         public async Task SendAsync(IInteractionContext context)
@@ -51,12 +52,12 @@ namespace CosmicBot.Messages
             await MessageStore.AddMessage(context, message.Id, this);
         }
 
-        public async Task UpdateAsync(IInteractionContext context)
+        public async Task UpdateAsync(IDiscordClient client)
         {
             var embed = GetEmbed();
             var components = GetButtons();
 
-            if (await context.Client.GetChannelAsync(_channelId) is not IMessageChannel channel)
+            if (await client.GetChannelAsync(_channelId) is not IMessageChannel channel)
                 return;
             if (await channel.GetMessageAsync(_messageId) is not IUserMessage message)
                 return;
@@ -68,16 +69,16 @@ namespace CosmicBot.Messages
         {
             if (Expired)
             {
-                await UpdateAsync(context);
+                await UpdateAsync(context.Client);
                 return;
             }
 
             var button = Buttons.FirstOrDefault(b => messageComponent.Data.CustomId.StartsWith(b.Id));
             if (button != null)
             {
-                Expires = DateTime.UtcNow.AddMinutes(1);
+                Expires = DateTime.UtcNow.AddMinutes(2);
                 await button.Press(context);
-                await UpdateAsync(context);
+                await UpdateAsync(context.Client);
             }
         }
 
