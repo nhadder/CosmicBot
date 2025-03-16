@@ -101,7 +101,7 @@ namespace CosmicBot.Service
             var player = await GetPlayerStatsAsync(guildId, userId);
             if (player != null)
             {
-                if(player.Points+(2*points) <= points)
+                if(player.Points+(2*points) < Math.Abs(points))
                     pointsLeft = false;
 
                 player.Points += points;
