@@ -95,11 +95,15 @@ namespace CosmicBot.Service
             return new MessageResponse(embed: playerCard);
         }
 
-        public async Task Award(ulong guildId, ulong userId, long points = 0, long xp = 0, int gamesWon = 0, int gamesLost = 0)
+        public async Task<bool> Award(ulong guildId, ulong userId, long points = 0, long xp = 0, int gamesWon = 0, int gamesLost = 0)
         {
+            var pointsLeft = true;
             var player = await GetPlayerStatsAsync(guildId, userId);
             if (player != null)
             {
+                if(player.Points+(2*points) < Math.Abs(points))
+                    pointsLeft = false;
+
                 player.Points += points;
                 player.Experience += xp;
                 player.GamesWon += gamesWon;
@@ -112,7 +116,10 @@ namespace CosmicBot.Service
 
                 _context.Update(player);
                 await _context.SaveChangesAsync();
+
+                return pointsLeft;
             }
+            return false;
         }
 
         private static int GetLevelFromXp(long experience)
