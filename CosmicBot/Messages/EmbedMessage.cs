@@ -49,7 +49,18 @@ namespace CosmicBot.Messages
             var message = await context.Interaction.FollowupAsync(embed: embed, components: components);
             _messageId = message.Id;
             _channelId = message.Channel.Id;
-            await MessageStore.AddMessage(context, message.Id, this);
+            await MessageStore.AddMessage(context.Client, message.Id, this);
+        }
+
+        public async Task SendAsync(IDiscordClient client, IMessageChannel channel)
+        {
+            var embed = GetEmbed();
+            var components = GetButtons();
+
+            var message = await channel.SendMessageAsync(embed: embed, components: components);
+            _messageId = message.Id;
+            _channelId = message.Channel.Id;
+            await MessageStore.AddMessage(client, message.Id, this);
         }
 
         public async Task UpdateAsync(IDiscordClient client)

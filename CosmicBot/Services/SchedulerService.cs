@@ -58,7 +58,7 @@ namespace CosmicBot.Service
 
                     try
                     {
-                        var response = await redditService.PostTop(post.Subreddit);
+                        var response = await redditService.Post(post.Subreddit);
                         var channel = socketClient.GetChannel(post.ChannelId) as IMessageChannel;
 
                         if (channel != null)
