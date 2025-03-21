@@ -1,6 +1,7 @@
 ﻿using CosmicBot.DAL;
 using CosmicBot.DiscordResponse;
 using CosmicBot.Models;
+using CosmicBot.Models.Enums;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
@@ -24,10 +25,10 @@ namespace CosmicBot.Service
             };
         }
 
-        public async Task<MessageResponse> PostTop(string subreddit)
+        public async Task<MessageResponse> Post(string subreddit, RedditCategory category = RedditCategory.Hot)
         {
             subreddit = subreddit.StartsWith(("r/")) ? subreddit.Substring(2) : subreddit;
-            var imageUrl = await GetRandomImagePostAsync(subreddit);
+            var imageUrl = await GetRandomImagePostAsync(subreddit, category);
             if (!string.IsNullOrWhiteSpace(imageUrl))
             {
                 var embed = new EmbedBuilder()
@@ -42,7 +43,7 @@ namespace CosmicBot.Service
 
         #region AutoPosts
 
-        public async Task<MessageResponse> AddAutoPost(ulong guildId, string subreddit, IMessageChannel channel, string startTime, string interval)
+        public async Task<MessageResponse> AddAutoPost(ulong guildId, string subreddit, RedditCategory category, IMessageChannel channel, string startTime, string interval)
         {
             subreddit = subreddit.StartsWith(("r/")) ? subreddit.Substring(2) : subreddit;
             var start = TimeOnly.Parse(startTime);
@@ -54,7 +55,8 @@ namespace CosmicBot.Service
                 Subreddit = subreddit,
                 ChannelId = channel.Id,
                 StartTime = start,
-                Interval = period
+                Interval = period,
+                Category = category
             };
 
             _context.Add(newAutoPost);
@@ -83,7 +85,7 @@ namespace CosmicBot.Service
 
             var sb = new StringBuilder();
             foreach (var post in autopost)
-                sb.AppendLine($"({post.Id}) r/{post.Subreddit} to Channel @{post.ChannelId}");
+                sb.AppendLine($"**{post.Id}**\nr/{post.Subreddit} [{post.Category}] to Channel <#{post.ChannelId}>\n");
 
             return new MessageResponse(sb.ToString(), ephemeral: true);
         }
@@ -103,9 +105,9 @@ namespace CosmicBot.Service
 
         #region Private Methods
 
-        private async Task<string?> GetRandomImagePostAsync(string subreddit)
+        private async Task<string?> GetRandomImagePostAsync(string subreddit, RedditCategory category = RedditCategory.Hot)
         {
-            string url = $"https://www.reddit.com/r/{subreddit}/hot.json?limit=30&t=day";
+            string url = $"https://www.reddit.com/r/{subreddit}/{category.ToString().ToLower()}.json?limit=50&t=day";
 
             try
             {
@@ -121,12 +123,14 @@ namespace CosmicBot.Service
                     .Where(p =>
                     {
                         string url = p.GetProperty("url").GetString() ?? "";
-                        return url.EndsWith(".jpg") || url.EndsWith(".png") || url.EndsWith(".gif") || url.EndsWith(".gifv");
-                    });
+                        return url.EndsWith(".jpg") || url.EndsWith(".png") || url.EndsWith(".gif") || url.EndsWith(".gifv") || url.EndsWith(".jpeg");
+                    }).ToList();
 
                 Random rng = new Random();
-                var topPost = posts.OrderBy(_ => rng.Next()).FirstOrDefault();
-                return topPost.ValueKind != JsonValueKind.Undefined ? topPost.GetProperty("url").GetString() : null;
+                var topPost = posts.Where(p => p.ValueKind != JsonValueKind.Undefined).OrderBy(_ => rng.Next()).FirstOrDefault();
+                if (topPost.TryGetProperty("url", out var postUrl) == false)
+                    return "No post found...";
+                return postUrl.GetString();
             }
             catch (Exception ex)
             {

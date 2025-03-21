@@ -26,17 +26,41 @@ namespace CosmicBot.Commands
             await Respond(await _playerService.Daily(Context.Guild.Id, Context.User.Id));
         }
 
-        [SlashCommand("leaderboard", "Show the star leadboard of the guild")]
-        public async Task Leaderboard()
+        [Group("leaderboard", "See current leaderboards")]
+        public class LeaderboardCommandModule : CommandModule
         {
-            if (!HasChannelPermissions())
+            private readonly PlayerService _playerService;
+
+            public LeaderboardCommandModule(PlayerService playerService)
             {
-                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
-                return;
+                _playerService = playerService;
             }
 
-            var playerStats = await _playerService.Leaderboard(Context.Guild.Id, Context);
-            await new PagedList(playerStats, 10, "Leaderboard").SendAsync(Context);
+            [SlashCommand("stars", "Show the star leadboard of the guild")]
+            public async Task Stars()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                var playerStats = await _playerService.StarLeaderboard(Context.Guild.Id, Context);
+                await new PagedList(playerStats, 10, "Star Leaderboard").SendAsync(Context);
+            }
+
+            [SlashCommand("levels", "Show the star leadboard of the guild")]
+            public async Task Levels()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                var playerStats = await _playerService.LevelLeaderboard(Context.Guild.Id, Context);
+                await new PagedList(playerStats, 10, "Level Leaderboard").SendAsync(Context);
+            }
         }
 
         [SlashCommand("stats", "Show the star leadboard of the guild")]
@@ -105,6 +129,37 @@ namespace CosmicBot.Commands
             }
 
             await new Knucklebones(Context, opponent, bet).SendAsync(Context);
+        }
+
+        [SlashCommand("groovebattle", "Battle another player")]
+        public async Task GrooveBattle(int bet, IUser opponent)
+        {
+            if (!HasChannelPermissions())
+            {
+                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                return;
+            }
+
+            if (bet < 0)
+            {
+                await Respond(new MessageResponse("Bet must be 0 or higher.", ephemeral: true));
+                return;
+            }
+
+            var player = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, Context.User.Id);
+            if (player.Points < bet)
+            {
+                await Respond(new MessageResponse("You do not have enough points for that bet", ephemeral: true));
+                return;
+            }
+            var player2 = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, opponent.Id);
+            if (player2.Points < bet)
+            {
+                await Respond(new MessageResponse($"{opponent.GlobalName} does not have enough points for that bet", ephemeral: true));
+                return;
+            }
+
+            await new GrooveBattle(Context, opponent, player.Level, player2.Level, bet).SendAsync(Context);
         }
     }
 }

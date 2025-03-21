@@ -1,4 +1,5 @@
 ﻿using CosmicBot.DAL.Validation;
+using CosmicBot.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace CosmicBot.Models
@@ -25,5 +26,7 @@ namespace CosmicBot.Models
         public TimeSpan Interval { get; set; }
 
         public DateTime? LastRan { get; set; }
+
+        public RedditCategory Category { get; set; } = RedditCategory.Hot;
     }
 }

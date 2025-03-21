@@ -66,7 +66,7 @@ namespace CosmicBot.Service
             return new MessageResponse($"You gained **{pointsEarned}** stars and gained **{experienceEarned}** xp!{leveledUp}");
         }
 
-        public async Task<List<string>> Leaderboard(ulong guildId, IInteractionContext interactionContext)
+        public async Task<List<string>> StarLeaderboard(ulong guildId, IInteractionContext interactionContext)
         {
             var playersInGuild = (await _context.PlayerStats.Where(p => p.GuildId == guildId).ToListAsync())
                 .OrderByDescending(l => l.Points).ToList();
@@ -79,6 +79,23 @@ namespace CosmicBot.Service
                 var stars = $"{player.Points} stars";
                 stars = stars.PadRight(16);
                 playerStats.Add($"{i+1}. {stars} {name}");
+            }
+            return playerStats;
+        }
+
+        public async Task<List<string>> LevelLeaderboard(ulong guildId, IInteractionContext interactionContext)
+        {
+            var playersInGuild = (await _context.PlayerStats.Where(p => p.GuildId == guildId).ToListAsync())
+                .OrderByDescending(l => l.Level).ToList();
+            var playerStats = new List<string>();
+            for (var i = 0; i < playersInGuild.Count; i++)
+            {
+                var player = playersInGuild[i];
+                var user = await interactionContext.Client.GetUserAsync(player.UserId);
+                var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
+                var stars = $"{player.Level} level";
+                stars = stars.PadRight(16);
+                playerStats.Add($"{i + 1}. {stars} {name}");
             }
             return playerStats;
         }

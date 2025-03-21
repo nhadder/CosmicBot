@@ -1,4 +1,5 @@
 ﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Models.Enums;
 using CosmicBot.Service;
 using Discord.Interactions;
 
@@ -14,7 +15,7 @@ namespace CosmicBot.Commands
         }
 
         [SlashCommand("post", "Show a random image in a subreddit")]
-        public async Task Post(string subreddit)
+        public async Task Post(string subreddit, RedditCategory category = RedditCategory.Hot)
         {
             if (!HasChannelPermissions())
             {
@@ -22,7 +23,7 @@ namespace CosmicBot.Commands
                 return;
             }
 
-            await Respond(await _service.PostTop(subreddit));
+            await Respond(await _service.Post(subreddit, category));
         }
     }
 }

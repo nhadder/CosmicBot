@@ -36,6 +36,12 @@ namespace CosmicBot.Messages.Components
             _userCards = DealCards(2);
             _dealerCards = DealCards(1);
 
+            if (GetTotal(_userCards) == 21)
+            {
+                Stand();
+                return;
+            }
+
             var hitButton = new MessageButton("Hit", ButtonStyle.Success);
             hitButton.OnPress += Hit;
             Buttons.Add(hitButton);

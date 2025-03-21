@@ -1,4 +1,5 @@
 ﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Models.Enums;
 using CosmicBot.Service;
 using Discord;
 using Discord.Interactions;
@@ -16,7 +17,7 @@ namespace CosmicBot.Commands
         }
 
         [SlashCommand("add", "Auto post the top reddit post. Start time: hh:mm:ss. Interval [d.]hh:mm:ss.")]
-        public async Task AddAutoPost(string subreddit, IMessageChannel channel, string startTime, string interval)
+        public async Task AddAutoPost(string subreddit, RedditCategory category, IMessageChannel channel, string startTime, string interval)
         {
             if (!HasChannelPermissions())
             {
@@ -24,7 +25,7 @@ namespace CosmicBot.Commands
                 return;
 
             }
-            await Respond(await _service.AddAutoPost(Context.Guild.Id, subreddit, channel, startTime, interval));
+            await Respond(await _service.AddAutoPost(Context.Guild.Id, subreddit, category, channel, startTime, interval));
         }
 
         [SlashCommand("remove", "Remove Auto post")]

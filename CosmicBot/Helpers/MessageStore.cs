@@ -10,9 +10,9 @@ namespace CosmicBot.Helpers
     {
         private static readonly Dictionary<ulong, EmbedMessage> _messages = [];
 
-        public static async Task AddMessage(IInteractionContext context, ulong messageId, EmbedMessage message)
+        public static async Task AddMessage(IDiscordClient client, ulong messageId, EmbedMessage message)
         {
-            await CheckForExpiredMessages(context.Client);
+            await CheckForExpiredMessages(client);
             _messages[messageId] = message;
         }
 
