@@ -1,4 +1,5 @@
-﻿using CosmicBot.Models;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Models;
 using CosmicBot.Models.Enums;
 using Discord;
 using System.Text;
@@ -38,15 +39,15 @@ namespace CosmicBot.Messages.Components
             _player2IconUrl = player2.GetAvatarUrl();
 
             var acceptButton = new MessageButton("Accept", ButtonStyle.Success);
-            acceptButton.OnPress += Accept;
+            acceptButton.OnPress = Accept;
             Buttons.Add(acceptButton);
 
             var denyButton = new MessageButton("Deny", ButtonStyle.Danger);
-            denyButton.OnPress += Deny;
+            denyButton.OnPress = Deny;
             Buttons.Add(denyButton);
         }
 
-        private Task PlayAgain(IInteractionContext? context = null)
+        private MessageResponse? PlayAgain(IInteractionContext context)
         {
             Status = GameStatus.InProgress;
             _player1Board = new Dice?[9];
@@ -55,10 +56,10 @@ namespace CosmicBot.Messages.Components
             RollDice();
             AddGameControls();
 
-            return Task.CompletedTask;
+            return null;
         }
 
-        public override Embed GetEmbed()
+        public override Embed[] GetEmbeds()
         {
             string activeUser, activeUrl;
             if (_turn == 0 || (Status == GameStatus.InProgress && _turn == 1) || Status == GameStatus.Won)
@@ -79,14 +80,11 @@ namespace CosmicBot.Messages.Components
             if(Status == GameStatus.InProgress)
                 embedBuilder.WithFooter($"{activeUser}'s turn");
 
-            return embedBuilder.Build();
+            return [embedBuilder.Build()];
         }
 
-        private Task Accept(IInteractionContext? context)
+        private MessageResponse? Accept(IInteractionContext context)
         {
-            if (context == null)
-                return Task.CompletedTask;
-
             if(context.User.Id == _player2Id)
             {
                 Status = GameStatus.InProgress;
@@ -94,20 +92,17 @@ namespace CosmicBot.Messages.Components
                 RollDice();
                 AddGameControls();
             }
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Deny(IInteractionContext? context)
+        private MessageResponse? Deny(IInteractionContext context)
         {
-            if (context == null)
-                return Task.CompletedTask;
-
             if (context.User.Id == _player2Id)
             {
                 Status = GameStatus.Rejected;
                 Expired = true;
             }
-            return Task.CompletedTask;
+            return null;
         }
 
         private void AddGameControls()
@@ -115,37 +110,37 @@ namespace CosmicBot.Messages.Components
             Buttons.Clear();
 
             _column1 = new MessageButton("1", ButtonStyle.Primary);
-            _column1.OnPress += Column1;
+            _column1.OnPress = Column1;
             Buttons.Add(_column1);
 
             _column2 = new MessageButton("2", ButtonStyle.Primary);
-            _column2.OnPress += Column2;
+            _column2.OnPress = Column2;
             Buttons.Add(_column2);
 
             _column3 = new MessageButton("3", ButtonStyle.Primary);
-            _column3.OnPress += Column3;
+            _column3.OnPress = Column3;
             Buttons.Add(_column3);
         }
 
-        private Task Column1(IInteractionContext? context)
+        private MessageResponse? Column1(IInteractionContext context)
         {
             ColumnAction(context, 0);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Column2(IInteractionContext? context)
+        private MessageResponse? Column2(IInteractionContext context)
         {
             ColumnAction(context, 1);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Column3(IInteractionContext? context)
+        private MessageResponse? Column3(IInteractionContext context)
         {
             ColumnAction(context, 2);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private void ColumnAction(IInteractionContext? context, int column)
+        private void ColumnAction(IInteractionContext context, int column)
         {
             if (context == null)
                 return;

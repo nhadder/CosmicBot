@@ -1,4 +1,5 @@
-﻿using CosmicBot.DiscordResponse;
+﻿using CosmicBot.Commands;
+using CosmicBot.DiscordResponse;
 using CosmicBot.Messages;
 using CosmicBot.Service;
 using Discord;
@@ -14,6 +15,16 @@ namespace CosmicBot.Helpers
         {
             await CheckForExpiredMessages(client);
             _messages[messageId] = message;
+        }
+
+        public static EmbedMessage GetMessage(ulong messageId)
+        {
+            return _messages[messageId];
+        }
+
+        public static bool MessageExists(ulong messageId)
+        {
+            return _messages.ContainsKey(messageId);
         }
 
         public static async Task<MessageResponse?> HandleMessageButtons(IInteractionContext context, PlayerService playerService)
@@ -33,7 +44,7 @@ namespace CosmicBot.Helpers
                     if (message.Participants != null && !message.Participants.Contains(context.Interaction.User.Id))
                         return new MessageResponse("You are not a participant to interact with that", ephemeral: true);
 
-                    await message.HandleButtons(context, messageComponent);
+                    var response = await message.HandleButtons(context, messageComponent);
 
                     if (message.Awards.Count > 0)
                     {
@@ -45,7 +56,7 @@ namespace CosmicBot.Helpers
                                 award.Points,
                                 award.Experience,
                                 award.GamesWon,
-                                award.GamesLost);
+                                award.GamesLost) && pointsLeft;
                         }
 
                         message.Awards.Clear();
@@ -61,7 +72,7 @@ namespace CosmicBot.Helpers
                     if(message.Expired)
                         RemoveMessage(messageComponent.Message.Id);
 
-                    return null;
+                    return response;
                 }
                 else
                 {
@@ -80,7 +91,7 @@ namespace CosmicBot.Helpers
         {
             foreach(var message in _messages)
             {
-                if (DateTime.UtcNow > message.Value.Expires)
+                if (DateTime.UtcNow > message.Value.Expires || message.Value.Expired)
                 {
                     await message.Value.Expire(client);
                     RemoveMessage(message.Key);

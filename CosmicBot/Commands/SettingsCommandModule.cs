@@ -27,5 +27,41 @@ namespace CosmicBot.Commands
 
             await Respond(await _service.SetTimezone(Context.Guild.Id, timezone));
         }
+
+        [Group("dancebattle","Dance battle settings")]
+        public class DanceBattleSettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public DanceBattleSettings(GuildSettingsService service)
+            {
+                _service= service;
+            }
+
+            [SlashCommand("on", "Choose a channel to hold daily dance battles in")]
+            public async Task SetDanceBattleChannel(IMessageChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await Respond(await _service.SetDanceBattleChannel(Context.Guild.Id, channel.Id));
+            }
+
+            [SlashCommand("off", "Stop dance battles from automatically happening")]
+            public async Task SetDanceBattleChannel()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await _service.RemoveDanceBattleSetting(Context.Guild.Id);
+                await Respond(new MessageResponse("Successful"));
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CosmicBot.DiscordResponse;
+using Discord;
 
 namespace CosmicBot.Messages.Components
 {
@@ -19,17 +20,17 @@ namespace CosmicBot.Messages.Components
             _title = title;
 
             _prev = new MessageButton("◀ Previous", ButtonStyle.Primary);
-            _prev.OnPress += Prev;
+            _prev.OnPress = Prev;
             Buttons.Add(_prev);
 
             _next = new MessageButton("Next ▶", ButtonStyle.Primary);
-            _next.OnPress += Next;
+            _next.OnPress = Next;
             Buttons.Add(_next);
 
             DisableButtonsIfNecessary();
         }
 
-        public override Embed GetEmbed()
+        public override Embed[] GetEmbeds()
         {
             var pagedItems = _items.Skip(_currentPage * _pageSize).Take(_pageSize);
 
@@ -40,7 +41,7 @@ namespace CosmicBot.Messages.Components
                 .WithDescription($"```{string.Join("\n", pagedItems)}```{expiredMessage}")
                 .WithFooter($"Page {_currentPage + 1} / {_totalPages}");
 
-            return embedBuilder.Build();
+            return [embedBuilder.Build()];
         }
 
         private void DisableButtonsIfNecessary()
@@ -49,18 +50,18 @@ namespace CosmicBot.Messages.Components
             _next.Disabled = _currentPage == _totalPages - 1;
         }
 
-        private Task Next(IInteractionContext? context = null)
+        private MessageResponse? Next(IInteractionContext context)
         {
             _currentPage++;
             DisableButtonsIfNecessary();
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Prev(IInteractionContext? context = null)
+        private MessageResponse? Prev(IInteractionContext context)
         {
             _currentPage--;
             DisableButtonsIfNecessary();
-            return Task.CompletedTask;
+            return null;
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using CosmicBot.DiscordResponse;
+using Discord;
 
 namespace CosmicBot.Messages
 {
@@ -11,13 +11,8 @@ namespace CosmicBot.Messages
         public IEmote? Emote { get; set; } = null;
         public bool Disabled { get; set; } = false;
 
-        public event Func<IInteractionContext?, Task> OnPress 
-        { 
-            add { _pressEvents.Add(value); } 
-            remove { _pressEvents.Remove(value); } 
-        }
+        public Func<IInteractionContext, MessageResponse?> OnPress { get; set; } = (context) => { return null; };
 
-        private readonly List<Func<IInteractionContext?, Task>> _pressEvents = new();
         public readonly string Id = $"button_{Guid.NewGuid()}";
 
         public MessageButton(string text, ButtonStyle style = ButtonStyle.Primary, int row = 0, IEmote? emote = null, bool disabled = false)
@@ -29,10 +24,9 @@ namespace CosmicBot.Messages
             Disabled = disabled;
         }
 
-        public async Task Press(IInteractionContext? context = null)
+        public MessageResponse? Press(IInteractionContext context)
         {
-            foreach (var e in _pressEvents)
-                await e(context);
+            return OnPress(context);
         }
     }
 }
