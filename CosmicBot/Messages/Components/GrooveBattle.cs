@@ -1,4 +1,5 @@
-﻿using CosmicBot.Models;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Models;
 using CosmicBot.Models.Enums;
 using Discord;
 using System.Text;
@@ -57,15 +58,15 @@ namespace CosmicBot.Messages.Components
             _player2Level = player2Level;
 
             var acceptButton = new MessageButton("Accept", ButtonStyle.Success);
-            acceptButton.OnPress += Accept;
+            acceptButton.OnPress = Accept;
             Buttons.Add(acceptButton);
 
             var denyButton = new MessageButton("Deny", ButtonStyle.Danger);
-            denyButton.OnPress += Deny;
+            denyButton.OnPress = Deny;
             Buttons.Add(denyButton);
         }
 
-        private Task PlayAgain(IInteractionContext? context = null)
+        private MessageResponse? PlayAgain(IInteractionContext context)
         {
             Status = GameStatus.InProgress;
             _player1Health = 100;
@@ -75,10 +76,10 @@ namespace CosmicBot.Messages.Components
             _player2Result = null;
             AddGameControls();
 
-            return Task.CompletedTask;
+            return null;
         }
 
-        public override Embed GetEmbed()
+        public override Embed[] GetEmbeds()
         {
             string activeUser, activeUrl;
             if (_turn == 0 || (Status == GameStatus.InProgress && _turn == 1) || Status == GameStatus.Won)
@@ -99,34 +100,28 @@ namespace CosmicBot.Messages.Components
             if(Status == GameStatus.InProgress)
                 embedBuilder.WithFooter($"{activeUser}'s turn");
 
-            return embedBuilder.Build();
+            return [embedBuilder.Build()];
         }
 
-        private Task Accept(IInteractionContext? context)
+        private MessageResponse? Accept(IInteractionContext context)
         {
-            if (context == null)
-                return Task.CompletedTask;
-
             if(context.User.Id == _player2Id)
             {
                 Status = GameStatus.InProgress;
                 _turn = 1;
                 AddGameControls();
             }
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Deny(IInteractionContext? context)
+        private MessageResponse? Deny(IInteractionContext context)
         {
-            if (context == null)
-                return Task.CompletedTask;
-
             if (context.User.Id == _player2Id)
             {
                 Status = GameStatus.Rejected;
                 Expired = true;
             }
-            return Task.CompletedTask;
+            return null;
         }
 
         private void AddGameControls()
@@ -134,44 +129,43 @@ namespace CosmicBot.Messages.Components
             Buttons.Clear();
 
             var slash = new MessageButton("Slash", ButtonStyle.Danger);
-            slash.OnPress += Slash;
+            slash.OnPress = Slash;
             Buttons.Add(slash);
 
             var stab = new MessageButton("Stab", ButtonStyle.Success);
-            stab.OnPress += Stab;
+            stab.OnPress = Stab;
             Buttons.Add(stab);
 
             var block = new MessageButton("Block", ButtonStyle.Primary);
-            block.OnPress += Block;
+            block.OnPress = Block;
             Buttons.Add(block);
         }
 
-        private Task Slash(IInteractionContext? context)
+        private MessageResponse? Slash(IInteractionContext context)
         {
             ColumnAction(context, AttackType.Slash);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Stab(IInteractionContext? context)
+        private MessageResponse? Stab(IInteractionContext context)
         {
             ColumnAction(context, AttackType.Stab);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private Task Block(IInteractionContext? context)
+        private MessageResponse? Block(IInteractionContext context)
         {
             ColumnAction(context, AttackType.Block);
-            return Task.CompletedTask;
+            return null;
         }
 
-        private void ColumnAction(IInteractionContext? context, AttackType attack)
+        private void ColumnAction(IInteractionContext context, AttackType attack)
         {
-            if (context == null)
-                return;
-
             if (_turn == 1 && context.User.Id == _userId)
             {
                 _player1Attack = attack;
+                _player1Result = null;
+                _player2Result = null;
                 _turn = 2;
             }
             else if (_turn == 2 && context.User.Id == _player2Id)
@@ -278,7 +272,7 @@ namespace CosmicBot.Messages.Components
             Buttons.Clear();
 
             var playAgainButton = new MessageButton("Play again?", ButtonStyle.Secondary);
-            playAgainButton.OnPress += PlayAgain;
+            playAgainButton.OnPress = PlayAgain;
             Buttons.Add(playAgainButton);
         }
 
@@ -491,7 +485,7 @@ Both Stab - take lesser dammage each";
            @"  | -_- |     ",
            @"   \---/      ",
            @"  /` |`\   __ ",
-           @" -\+-|--\/|- |",
+           @" -\+-|--\/|> |",
            @"     |    |  |",
            @"    / \    \/ ",
            @"   /   \      ",
@@ -504,7 +498,7 @@ Both Stab - take lesser dammage each";
            @"  | >_< |     ",
            @"   \---/   __ ",
            @"  /` |`- /|  |",
-           @"-/+-|---- |  |",
+           @"-/+-|---> |  |",
            @"     |     \/ ",
            @"    / \       ",
            @"   /   \      ",
@@ -517,7 +511,7 @@ Both Stab - take lesser dammage each";
            @"  | -_- |     ",
            @"   \---/      ",
            @"   `\|`\      ",
-           @"    -|\+\-----",
+           @"    -|\+\---->",
            @"     |  /--\  ",
            @"    / \ |  |  ",
            @"   /   \ \/   ",
@@ -525,7 +519,7 @@ Both Stab - take lesser dammage each";
 
         private static List<string> Player1CharacterSlash = new List<string>()
         {
-           @"    ~~~~  ~   ",
+           @"    ~~~~  ~ ^ ",
            @"   /  ~~~~ /  ",
            @"  | >_> | -   ",
            @"   \---/ /    ",
@@ -543,7 +537,7 @@ Both Stab - take lesser dammage each";
            @"     |  v  |  ",
            @"      \---/   ",
            @" __   /`| `\  ",
-           @"| -|\/--|-+/- ",
+           @"| <|\/--|-+/- ",
            @"|  |    |     ",
            @" \/    / \    ",
            @"      /   \   ",
@@ -556,7 +550,7 @@ Both Stab - take lesser dammage each";
            @"     |  o  |  ",
            @" --   \---/   ",
            @"|  |\ -`| `\  ",
-           @"|  |  --|--+\-",
+           @"|  |  <-|--+\-",
            @" \/     |     ",
            @"       / \    ",
            @"      /   \   ",
@@ -569,7 +563,7 @@ Both Stab - take lesser dammage each";
            @"     |  >  |  ",
            @"      \---/   ",
            @"      /`|/`   ",
-           @"-----/+/|-    ",
+           @"<----/+/|-    ",
            @" /--\   |     ",
            @" |  |  / \    ",
            @"  \/  /   \   ", 
@@ -577,7 +571,7 @@ Both Stab - take lesser dammage each";
 
         private static List<string> Player2CharacterSlash = new List<string>()
         {
-           @"       _t_    ",
+           @"  ^    _t_    ",
            @"   \ ~/>v<\~  ",
            @"    -|  x  |  ",
            @"     \\---/   ",

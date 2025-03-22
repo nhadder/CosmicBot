@@ -1,4 +1,5 @@
-﻿using CosmicBot.Helpers;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Helpers;
 using CosmicBot.Models;
 using Discord;
 using Discord.WebSocket;
@@ -12,16 +13,22 @@ namespace CosmicBot.Messages
         public List<MessageButton> Buttons { get; set; } = [];
         public bool Expired { get; protected set; }
         public List<PlayerAward> Awards { get; protected set; } = [];
+        public bool DisableAutoExpiring { get; set; } = false;
 
         private ulong _messageId;
         private ulong _channelId;
 
-        public EmbedMessage(List<ulong>? userParticipants = null)
+        public EmbedMessage(List<ulong>? userParticipants = null, bool disableAutoExpiring = false)
         {
-            Expires = DateTime.UtcNow.AddMinutes(2);
+            DisableAutoExpiring = disableAutoExpiring;
+            if (!DisableAutoExpiring)
+                Expires = DateTime.UtcNow.AddMinutes(2);
+            else
+                Expires = DateTime.UtcNow.AddDays(8);
+
             Participants = userParticipants;
         }
-        public abstract Embed GetEmbed();
+        public abstract Embed[] GetEmbeds();
         public MessageComponent? GetButtons()
         {
             if (Buttons.Count == 0)
@@ -43,29 +50,30 @@ namespace CosmicBot.Messages
         {
             await context.Interaction.DeferAsync();
 
-            var embed = GetEmbed();
+            var embeds = GetEmbeds();
             var components = GetButtons();
 
-            var message = await context.Interaction.FollowupAsync(embed: embed, components: components);
+            var message = await context.Interaction.FollowupAsync(embeds: embeds, components: components);
             _messageId = message.Id;
             _channelId = message.Channel.Id;
             await MessageStore.AddMessage(context.Client, message.Id, this);
         }
 
-        public async Task SendAsync(IDiscordClient client, IMessageChannel channel)
+        public async Task<ulong> SendAsync(IDiscordClient client, IMessageChannel channel)
         {
-            var embed = GetEmbed();
+            var embeds = GetEmbeds();
             var components = GetButtons();
 
-            var message = await channel.SendMessageAsync(embed: embed, components: components);
+            var message = await channel.SendMessageAsync(embeds: embeds, components: components);
             _messageId = message.Id;
             _channelId = message.Channel.Id;
             await MessageStore.AddMessage(client, message.Id, this);
+            return message.Id;
         }
 
         public async Task UpdateAsync(IDiscordClient client)
         {
-            var embed = GetEmbed();
+            var embeds = GetEmbeds();
             var components = GetButtons();
 
             if (await client.GetChannelAsync(_channelId) is not IMessageChannel channel)
@@ -73,24 +81,28 @@ namespace CosmicBot.Messages
             if (await channel.GetMessageAsync(_messageId) is not IUserMessage message)
                 return;
 
-            await message.ModifyAsync(msg => { msg.Embed = embed; msg.Components = components; });
+            await message.ModifyAsync(msg => { msg.Embeds = embeds; msg.Components = components; });
         }
 
-        public async Task HandleButtons(IInteractionContext context, SocketMessageComponent messageComponent)
+        public async Task<MessageResponse?> HandleButtons(IInteractionContext context, SocketMessageComponent messageComponent)
         {
             if (Expired)
             {
                 await UpdateAsync(context.Client);
-                return;
+                return null;
             }
 
             var button = Buttons.FirstOrDefault(b => messageComponent.Data.CustomId.StartsWith(b.Id));
             if (button != null)
             {
-                Expires = DateTime.UtcNow.AddMinutes(2);
-                await button.Press(context);
+                if(!DisableAutoExpiring)
+                    Expires = DateTime.UtcNow.AddMinutes(2);
+                var response = button.Press(context);
                 await UpdateAsync(context.Client);
+                return response;
             }
+
+            return null;
         }
 
     }

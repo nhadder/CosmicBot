@@ -1,5 +1,7 @@
 ﻿using CosmicBot.DAL;
 using CosmicBot.Helpers;
+using CosmicBot.Messages.Components;
+using CosmicBot.Models.Enums;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,9 +35,49 @@ namespace CosmicBot.Service
 
                     await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
                     await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
+                    await DanceBattle(guildSettingsService, socketClient);
                     await MessageStore.CheckForExpiredMessages(socketClient);
                 }
                     Thread.Sleep(TimeSpan.FromMinutes(1));
+            }
+        }
+
+        private static async Task DanceBattle(GuildSettingsService settings, DiscordSocketClient socketClient)
+        {
+            var guilds = socketClient.Guilds;
+            foreach(var guild in guilds)
+            {
+                var channelId = settings.GetDanceBattleChannel(guild.Id);
+                if(channelId != null)
+                {
+                    var channel = guild.Channels.FirstOrDefault(c => c.Id == channelId) as IMessageChannel;
+                    if (channel == null)
+                        continue;
+
+                    var messageId = settings.GetDanceBattleMessageId(guild.Id);
+                    if(messageId == null)
+                    {
+                        var danceBattle = await new DanceOff().SendAsync(socketClient, channel);
+                        await settings.SetDanceBattleMessageId(guild.Id, danceBattle);
+                    }
+                    else
+                    {
+                        if (!MessageStore.MessageExists((ulong)messageId))
+                        {                      
+                            var newGame = await new DanceOff().SendAsync(socketClient, channel);
+                            await settings.SetDanceBattleMessageId(guild.Id, newGame);
+                        }
+                        else
+                        {
+                            var message = MessageStore.GetMessage((ulong)messageId) as DanceOff;
+                            if (message != null)
+                            {
+                                message.Next();
+                                await message.UpdateAsync(socketClient);
+                            }
+                        }
+                    }
+                }
             }
         }
 

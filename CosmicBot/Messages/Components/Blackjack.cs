@@ -1,4 +1,5 @@
-﻿using CosmicBot.Models;
+﻿using CosmicBot.DiscordResponse;
+using CosmicBot.Models;
 using CosmicBot.Models.Enums;
 using Discord;
 using System.Text;
@@ -24,10 +25,10 @@ namespace CosmicBot.Messages.Components
             _username = context.User.GlobalName;
             _iconUrl = context.User.GetAvatarUrl();
 
-            SetupGame();
+            SetupGame(context);
         }
 
-        private void SetupGame()
+        private void SetupGame(IInteractionContext context)
         {
             Status = GameStatus.InProgress;
             _userCards.Clear();
@@ -38,20 +39,20 @@ namespace CosmicBot.Messages.Components
 
             if (GetTotal(_userCards) == 21)
             {
-                Stand();
+                Stand(context);
                 return;
             }
 
             var hitButton = new MessageButton("Hit", ButtonStyle.Success);
-            hitButton.OnPress += Hit;
+            hitButton.OnPress = Hit;
             Buttons.Add(hitButton);
 
             var standButton = new MessageButton("Stand", ButtonStyle.Danger);
-            standButton.OnPress += Stand;
+            standButton.OnPress = Stand;
             Buttons.Add(standButton);
         }
 
-        public override Embed GetEmbed()
+        public override Embed[] GetEmbeds()
         {
             var embedBuilder = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
@@ -59,17 +60,17 @@ namespace CosmicBot.Messages.Components
                 .WithDescription(GetGameWindow())
                 .WithFooter(_username);
 
-            return embedBuilder.Build();
+            return [embedBuilder.Build()];
         }
 
-        private Task PlayAgain(IInteractionContext? context = null)
+        private MessageResponse? PlayAgain(IInteractionContext context)
         {
             Buttons.Clear();
-            SetupGame();
-            return Task.CompletedTask;
+            SetupGame(context);
+            return null;
         }
 
-        private async Task Hit(IInteractionContext? context = null)
+        private MessageResponse? Hit(IInteractionContext context)
         {
             _userCards.AddRange(DealCards(1));
 
@@ -77,10 +78,12 @@ namespace CosmicBot.Messages.Components
             if (total > 21)
                 GameOver(GameStatus.Lost);
             else if(total == 21)
-                await Stand();
+                Stand(context);
+
+            return null;
         }
 
-        private Task Stand(IInteractionContext? context = null)
+        private MessageResponse? Stand(IInteractionContext context)
         {
             var dealerTotal = GetTotal(_dealerCards);
             while (dealerTotal < 17)
@@ -98,7 +101,7 @@ namespace CosmicBot.Messages.Components
             else
                 GameOver(GameStatus.Tie);
 
-            return Task.CompletedTask;
+            return null;
         }
 
         private void GameOver(GameStatus status)
@@ -114,7 +117,7 @@ namespace CosmicBot.Messages.Components
 
             Buttons.Clear();
             var tryAgainButton = new MessageButton("Play Again?", ButtonStyle.Secondary);
-            tryAgainButton.OnPress += PlayAgain;
+            tryAgainButton.OnPress = PlayAgain;
             Buttons.Add(tryAgainButton);
         }
 
