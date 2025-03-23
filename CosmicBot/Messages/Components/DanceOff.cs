@@ -31,7 +31,7 @@ namespace CosmicBot.Messages.Components
             button.OnPress += Join;
             Buttons.Add(button);
             _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dance battle")).Result;
-            _startTime = DateTime.UtcNow.AddMinutes(3);
+            _startTime = DateTime.UtcNow.AddDays(1);
         }
 
         public async Task Next(IMessageChannel channel)
