@@ -72,7 +72,7 @@ namespace CosmicBot.Service
                             var message = MessageStore.GetMessage((ulong)messageId) as DanceOff;
                             if (message != null)
                             {
-                                message.Next();
+                                await message.Next(channel);
                                 await message.UpdateAsync(socketClient);
                             }
                         }

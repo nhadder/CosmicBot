@@ -24,41 +24,42 @@ namespace CosmicBot.Messages.Components
         private DateTime _startTime;
         private GameStatus Status = GameStatus.Pending;
         private string _startingGifUrl;
+        private IDisposable? _typing;
         public DanceOff() : base(null, true) 
         {
             var button = new MessageButton("Join Dance Battle", ButtonStyle.Success);
             button.OnPress += Join;
             Buttons.Add(button);
-            _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dancefloor")).Result;
-            _startTime = DateTime.UtcNow.AddDays(1);
+            _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dance battle")).Result;
+            _startTime = DateTime.UtcNow.AddMinutes(3);
         }
 
-        public void Next()
+        public async Task Next(IMessageChannel channel)
         {
             if(Status == GameStatus.Pending)
             {
                 if (DateTime.UtcNow > _startTime)
                 {
                     if (_dancers.Count < 2)
-                        GameOver(GameStatus.Rejected);
+                        await GameOver(GameStatus.Rejected, channel);
                     else
                     {
                         Status = GameStatus.InProgress;
                         Buttons.Clear();
-                        PickOpponents();
+                        await PickOpponents(channel);
                     }
                 }
             } 
             else if (Status == GameStatus.InProgress)
             {
                 if (_survivors.Count == 1 && _dancers.Count <= 1)
-                    GameOver(GameStatus.Won);
+                    await GameOver(GameStatus.Won, channel);
                 else
-                    PickOpponents();
+                    await PickOpponents(channel);
             }
         }
 
-        private void PickOpponents()
+        private async Task PickOpponents(IMessageChannel channel)
         {
             var rng = new Random();
             if (_dancers.Count <= 1)
@@ -77,18 +78,48 @@ namespace CosmicBot.Messages.Components
             _survivors.Add(_player1);
             _dancers.RemoveAt(0);
             _dancers.RemoveAt(0);
+
+            var randomGif = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("party dance")).Result;
+            var embedBuilder1 = new EmbedBuilder()
+                .WithAuthor(new EmbedAuthorBuilder()
+                    .WithUrl(_player1.ImageUrl)
+                    .WithName($"{_player1.Name} won!")
+                    .WithIconUrl(_player1.ImageUrl))
+                .WithDescription($"<@{_player1.Id}> {_winnerMessages.OrderBy(_ => rng.Next()).First()}")
+                .WithImageUrl(randomGif);
+
+            var randomGif2 = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("bad dance")).Result;
+            var embedBuilder2 = new EmbedBuilder()
+                .WithAuthor(new EmbedAuthorBuilder()
+                    .WithUrl(_player2.ImageUrl)
+                    .WithName($"{_player2.Name} lost")
+                    .WithIconUrl(_player2.ImageUrl))
+                .WithDescription($"<@{_player2.Id}> {_loseMessages.OrderBy(_ => rng.Next()).First()}")
+                .WithImageUrl(randomGif2);
+
+            await channel.SendMessageAsync(embeds: [embedBuilder1.Build(), embedBuilder2.Build()]);
+            _typing = channel.EnterTypingState();
         }
 
-        private void GameOver(GameStatus status)
+        private async Task GameOver(GameStatus status, IMessageChannel channel)
         {
             if (status == GameStatus.Won)
             {
                 _winner = _survivors.First();
                 Awards.Add(new PlayerAward(_winner.Id, 10_000, 10_000, 1, 0));
+                var embedBuilder = new EmbedBuilder()
+                    .WithTitle($"Dance Battle - Winner {_winner.Name}")
+                    .WithImageUrl(_winner.ImageUrl)
+                    .WithDescription($"<@{_winner.Id}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
+
+                await channel.SendMessageAsync(embed: embedBuilder.Build());
+                await channel.SendMessageAsync($"<@{_winner.Id}>");
             }
             Buttons.Clear();
             Expired = true;
             Status = status;
+            if(_typing != null)
+                _typing.Dispose();
         }
 
         private MessageResponse? Join(IInteractionContext context)
@@ -108,8 +139,16 @@ namespace CosmicBot.Messages.Components
 
         public override Embed[] GetEmbeds()
         {
-            if (Status == GameStatus.Pending)
+            if (Status == GameStatus.Rejected)
             {
+                return [new EmbedBuilder()
+                    .WithTitle("Dance Battle")
+                    .WithDescription("Not enough people joined this time...")
+                    .Build()];
+            }
+            else if (Status == GameStatus.Pending)
+            {
+
                 var sb = new StringBuilder();
                 sb.AppendLine("@everyone Join the party and face off on the dance floor!");
                 var timeLeft = _startTime - DateTime.UtcNow;
@@ -129,47 +168,12 @@ namespace CosmicBot.Messages.Components
 
                 return [embedBuilder.Build()];
             }
-            else if (Status == GameStatus.InProgress)
+            else
             {
-                var rng = new Random();
-                var randomGif = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("party dance")).Result;
-                var embedBuilder1 = new EmbedBuilder()
-                    .WithTitle("Won")
-                    .WithAuthor(new EmbedAuthorBuilder()
-                        .WithUrl(_player1.ImageUrl)
-                        .WithName(_player1.Name)
-                        .WithIconUrl(_player1.ImageUrl))
-                    .WithDescription($"<@{_player1.Id}> {_winnerMessages.OrderBy(_ => rng.Next()).First()}")
-                    .WithImageUrl(randomGif);
-
-                var randomGif2 = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("bad dance")).Result;
-                var embedBuilder2 = new EmbedBuilder()
-                    .WithTitle("Lost")
-                    .WithAuthor(new EmbedAuthorBuilder()
-                        .WithUrl(_player2.ImageUrl)
-                        .WithName(_player2.Name)
-                        .WithIconUrl(_player2.ImageUrl))
-                    .WithDescription($"<@{_player2.Id}> {_loseMessages.OrderBy(_ => rng.Next()).First()}")
-                    .WithImageUrl(randomGif2);
-
-                return [embedBuilder1.Build(), embedBuilder2.Build()];
-            } 
-            else if (Status == GameStatus.Rejected)
-            {
-                var embedBuilder = new EmbedBuilder()
+                return [new EmbedBuilder()
                     .WithTitle("Dance Battle")
-                    .WithDescription("Join the party and face off on the dance floor!\nNot enough people joined this time...");
-
-                return [embedBuilder.Build()];
-            } 
-            else //won
-            {
-                var embedBuilder = new EmbedBuilder()
-                    .WithTitle($"Dance Battle - Winner {_winner.Name}")
-                    .WithImageUrl(_winner.ImageUrl)
-                    .WithDescription($"<@{_winner.Id}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
-
-                return [embedBuilder.Build()];
+                    .WithDescription("The dance battle is underway!")
+                    .Build()];
             }
         }
 
