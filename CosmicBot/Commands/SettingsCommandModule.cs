@@ -60,7 +60,7 @@ namespace CosmicBot.Commands
                 }
 
                 await _service.RemoveDanceBattleSetting(Context.Guild.Id);
-                await Respond(new MessageResponse("Successful"));
+                await Respond(new MessageResponse("Successful", ephemeral: true));
             }
         }
     }

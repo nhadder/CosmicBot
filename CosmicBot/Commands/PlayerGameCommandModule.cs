@@ -131,8 +131,8 @@ namespace CosmicBot.Commands
             await new Knucklebones(Context, opponent, bet).SendAsync(Context);
         }
 
-        [SlashCommand("groovebattle", "Battle another player")]
-        public async Task GrooveBattle(int bet, IUser opponent)
+        [SlashCommand("battle", "Battle another player")]
+        public async Task Battle(int bet, IUser opponent)
         {
             if (!HasChannelPermissions())
             {
@@ -159,7 +159,7 @@ namespace CosmicBot.Commands
                 return;
             }
 
-            await new GrooveBattle(Context, opponent, player.Level, player2.Level, bet).SendAsync(Context);
+            await new Battle(Context, opponent, player.Level, player2.Level, bet).SendAsync(Context);
         }
     }
 }
