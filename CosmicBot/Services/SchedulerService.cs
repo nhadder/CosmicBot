@@ -1,7 +1,6 @@
 ﻿using CosmicBot.DAL;
 using CosmicBot.Helpers;
 using CosmicBot.Messages.Components;
-using CosmicBot.Models.Enums;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +34,34 @@ namespace CosmicBot.Service
 
                     await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
                     await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
+                    await BotChannelGifts(guildSettingsService, socketClient);
                     await DanceBattle(guildSettingsService, socketClient);
                     await MessageStore.CheckForExpiredMessages(socketClient);
                 }
-                    Thread.Sleep(TimeSpan.FromMinutes(1));
+                Thread.Sleep(TimeSpan.FromMinutes(1));
+            }
+        }
+
+        private static async Task BotChannelGifts(GuildSettingsService settings, DiscordSocketClient socketClient)
+        {
+            if (DateTime.UtcNow.Minute == 0 || DateTime.UtcNow.Minute == 30)
+            {
+                var guilds = socketClient.Guilds;
+                foreach (var guild in guilds)
+                {
+                    var botChannels = settings.GetBotChannels(guild.Id);
+                    var activeChests = MessageStore.GetMessagesOfType(typeof(Chest)).Count;
+                    if (botChannels != null && botChannels.Any() && activeChests < botChannels.Count)
+                    {
+                        var rng = new Random();
+                        var chosen = botChannels.OrderBy(_ => rng.Next()).First();
+                        var channel = guild.Channels.FirstOrDefault(c => c.Id == chosen) as IMessageChannel;
+                        if (channel != null)
+                        {
+                            await new Chest().SendAsync(socketClient, channel);
+                        }
+                    }
+                }
             }
         }
 

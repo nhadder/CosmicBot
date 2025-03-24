@@ -66,6 +66,21 @@ namespace CosmicBot.Service
             return new MessageResponse($"You gained **{pointsEarned}** stars and gained **{experienceEarned}** xp!{leveledUp}");
         }
 
+        public async Task<MessageResponse> TransferPoints(ulong guildId, ulong fromId, ulong toId, int amount)
+        {
+            var from = await GetPlayerStatsAsync(guildId, fromId);
+
+            if (from.Points < amount)
+                return new MessageResponse("You do not have enough stars for that.", ephemeral: true);
+
+            var to = await GetPlayerStatsAsync(guildId, toId);
+
+            from.Points -= amount;
+            to.Points += amount;
+            await _context.SaveChangesAsync();
+            return new MessageResponse("Stars successfully sent!", ephemeral: true);
+        }
+
         public async Task<List<string>> StarLeaderboard(ulong guildId, IInteractionContext interactionContext)
         {
             var playersInGuild = (await _context.PlayerStats.Where(p => p.GuildId == guildId).ToListAsync())
@@ -112,24 +127,24 @@ namespace CosmicBot.Service
             return new MessageResponse(embed: playerCard);
         }
 
-        public async Task<bool> Award(ulong guildId, ulong userId, long points = 0, long xp = 0, int gamesWon = 0, int gamesLost = 0)
+        public async Task<bool> Award(ulong guildId, ulong userId, long? points = 0, long? xp = 0, int? gamesWon = 0, int? gamesLost = 0)
         {
             var pointsLeft = true;
             var player = await GetPlayerStatsAsync(guildId, userId);
             if (player != null)
             {
-                if(player.Points+(2*points) < Math.Abs(points))
-                    pointsLeft = false;
-
-                player.Points += points;
-                player.Experience += xp;
-                player.GamesWon += gamesWon;
-                player.GamesLost += gamesLost;
+                player.Points += points ?? 0;
+                player.Experience += xp ?? 0;
+                player.GamesWon += gamesWon ?? 0;
+                player.GamesLost += gamesLost ?? 0;
 
                 player.Level = GetLevelFromXp(player.Experience);
 
                 if (player.Points < 0)
                     player.Points = 0;
+
+                if (player.Points + points < Math.Abs(points ?? 0))
+                    pointsLeft = false;
 
                 _context.Update(player);
                 await _context.SaveChangesAsync();

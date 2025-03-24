@@ -28,6 +28,43 @@ namespace CosmicBot.Commands
             await Respond(await _service.SetTimezone(Context.Guild.Id, timezone));
         }
 
+        [Group("botchannel", "Designate Bot Channels")]
+        public class BotChannelSettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public BotChannelSettings(GuildSettingsService service)
+            {
+                _service = service;
+            }
+
+            [SlashCommand("add", "Add a bot channel")]
+            public async Task AddBotChannel(IChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await Respond(await _service.SetBotChannel(Context.Guild.Id, channel.Id));
+            }
+
+            [SlashCommand("remove", "Remove a bot channel")]
+            public async Task RemoveBotChannel(IChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveBotChannel(Context.Guild.Id, channel.Id);
+
+                await Respond(new MessageResponse("Bot channel successfully removed", ephemeral: true));
+            }
+
+        }
+
         [Group("dancebattle","Dance battle settings")]
         public class DanceBattleSettings : CommandModule
         {

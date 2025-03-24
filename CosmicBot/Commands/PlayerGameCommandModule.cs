@@ -26,6 +26,24 @@ namespace CosmicBot.Commands
             await Respond(await _playerService.Daily(Context.Guild.Id, Context.User.Id));
         }
 
+        [SlashCommand("gift", "Gift stars to another player")]
+        public async Task Gift(IUser to, int amount)
+        {
+            if (!HasChannelPermissions())
+            {
+                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                return;
+            }
+
+            if (amount <= 0)
+            {
+                await Respond(new MessageResponse("Amount must be a positive number", ephemeral: true));
+                return;
+            }
+
+            await Respond(await _playerService.TransferPoints(Context.Guild.Id, Context.User.Id, to.Id, amount));
+        }
+
         [Group("leaderboard", "See current leaderboards")]
         public class LeaderboardCommandModule : CommandModule
         {

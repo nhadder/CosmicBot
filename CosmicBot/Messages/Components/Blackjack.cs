@@ -16,11 +16,11 @@ namespace CosmicBot.Messages.Components
         private readonly ulong _userId;
         private GameStatus Status;
         private readonly long _bet;
+        private bool _doubled = false;
 
         public Blackjack(IInteractionContext context, long bet) : base([context.User.Id])
         {
             _bet = bet;
-
             _userId = context.User.Id;
             _username = context.User.GlobalName;
             _iconUrl = context.User.GetAvatarUrl();
@@ -33,7 +33,7 @@ namespace CosmicBot.Messages.Components
             Status = GameStatus.InProgress;
             _userCards.Clear();
             _dealerCards.Clear();
-
+            _doubled = false;
             _userCards = DealCards(2);
             _dealerCards = DealCards(1);
 
@@ -50,6 +50,10 @@ namespace CosmicBot.Messages.Components
             var standButton = new MessageButton("Stand", ButtonStyle.Danger);
             standButton.OnPress = Stand;
             Buttons.Add(standButton);
+
+            var doubleButton = new MessageButton("Double Down", ButtonStyle.Primary);
+            doubleButton.OnPress = DoubleDown;
+            Buttons.Add(doubleButton);
         }
 
         public override Embed[] GetEmbeds()
@@ -83,6 +87,21 @@ namespace CosmicBot.Messages.Components
             return null;
         }
 
+        private MessageResponse? DoubleDown(IInteractionContext context)
+        {
+            _doubled = true;
+            _userCards.AddRange(DealCards(1));
+
+            var total = GetTotal(_userCards);
+            if (total > 21)
+            {
+                GameOver(GameStatus.Lost);
+                return null;
+            }
+            
+            return Stand(context);
+        }
+
         private MessageResponse? Stand(IInteractionContext context)
         {
             var dealerTotal = GetTotal(_dealerCards);
@@ -106,10 +125,11 @@ namespace CosmicBot.Messages.Components
 
         private void GameOver(GameStatus status)
         {
+            var bonus = _doubled ? _bet : 0;
             if(status == GameStatus.Won)
-                Awards.Add(new PlayerAward(_userId, _bet, 20, 1, 0));
+                Awards.Add(new PlayerAward(_userId, _bet + bonus, 20, 1, 0));
             if(status == GameStatus.Lost)
-                Awards.Add(new PlayerAward(_userId, -_bet, 5, 0, 1));
+                Awards.Add(new PlayerAward(_userId, -_bet - bonus, 5, 0, 1));
             if(status == GameStatus.Tie)
                 Awards.Add(new PlayerAward(_userId, 0, 10, 0, 0));
 
@@ -135,11 +155,12 @@ namespace CosmicBot.Messages.Components
                 GetTotal(_dealerCards.Take(1).ToList()).ToString() :
                 GetTotal(_dealerCards).ToString());
 
+            var bonus = _doubled ? _bet : 0;
             var result = string.Empty;
             if (Status == GameStatus.Won)
-                result = $"You won! You gained **{_bet}** stars and **20** XP!";
+                result = $"You won! You gained **{_bet+bonus}** stars and **20** XP!";
             if (Status == GameStatus.Lost)
-                result = $"You lose! You lost **{_bet}** stars and gained **5** XP!";
+                result = $"You lose! You lost **{_bet+bonus}** stars and gained **5** XP!";
             if (Status == GameStatus.Tie)
                 result = $"Push. You gained **10** XP!";
 

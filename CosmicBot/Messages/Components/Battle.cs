@@ -107,12 +107,15 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Accept(IInteractionContext context)
         {
-            if(context.User.Id == _player2Id)
+            if (context.User.Id == _player2Id)
             {
                 Status = GameStatus.InProgress;
                 _turn = 1;
                 AddGameControls();
             }
+            else
+                return new MessageResponse("You can not accept your own game invitation...", ephemeral: true);
+
             return null;
         }
 
@@ -123,6 +126,9 @@ namespace CosmicBot.Messages.Components
                 Status = GameStatus.Rejected;
                 Expired = true;
             }
+            else
+                return new MessageResponse("You can not deny your own game invitation...", ephemeral: true);
+
             return null;
         }
 
@@ -145,23 +151,20 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Slash(IInteractionContext context)
         {
-            ColumnAction(context, AttackType.Slash);
-            return null;
+            return ColumnAction(context, AttackType.Slash);
         }
 
         private MessageResponse? Stab(IInteractionContext context)
         {
-            ColumnAction(context, AttackType.Stab);
-            return null;
+            return ColumnAction(context, AttackType.Stab);
         }
 
         private MessageResponse? Block(IInteractionContext context)
         {
-            ColumnAction(context, AttackType.Block);
-            return null;
+            return ColumnAction(context, AttackType.Block);
         }
 
-        private void ColumnAction(IInteractionContext context, AttackType attack)
+        private MessageResponse? ColumnAction(IInteractionContext context, AttackType attack)
         {
             if (_turn == 1 && context.User.Id == _userId)
             {
@@ -173,6 +176,8 @@ namespace CosmicBot.Messages.Components
                 }
                 else
                     _turn = 2;
+
+                return null;
             }
             else if (_turn == 2 && context.User.Id == _player2Id)
             {
@@ -185,7 +190,11 @@ namespace CosmicBot.Messages.Components
                     _player1Attack = AttackType.Rest;
                     _turn = 2;
                 }
+
+                return null;
             }
+            else
+                return new MessageResponse("It is not your turn yet...", ephemeral: true);
         }
         
         private static AttackResult GetAttackResult(AttackType attack, AttackType other, int levelDifference)

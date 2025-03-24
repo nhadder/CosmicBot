@@ -61,6 +61,35 @@ namespace CosmicBot.Service
             return Convert.ToUInt64(setting);
         }
 
+        public async Task RemoveBotChannel(ulong guildId, ulong channelId)
+        {
+            var channels = GetBotChannels(guildId);
+            if (channels == null)
+                return;
+
+            channels.Remove(channelId);
+            await SetSetting(guildId, GuildSettingNames.BotChannel, string.Join(";", channels));
+        }
+
+        public async Task<MessageResponse> SetBotChannel(ulong guildId, ulong channelId)
+        {
+            var channels = GetBotChannels(guildId);
+            if (channels == null)
+                channels = new List<ulong>();
+
+            channels.Add(channelId);
+
+            await SetSetting(guildId, GuildSettingNames.BotChannel, string.Join(";", channels));
+            return new MessageResponse($"Bot Channel added <#{channelId}>", ephemeral: true);
+        }
+
+        public List<ulong>? GetBotChannels(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.BotChannel);
+            if (string.IsNullOrEmpty(setting)) return null;
+            return setting.Split(";").Select(c => Convert.ToUInt64(c)).ToList();
+        }
+
         #region Private Methods
 
         private async Task SetSetting(ulong guildId, string key, string value)
