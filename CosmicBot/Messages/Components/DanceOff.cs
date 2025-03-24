@@ -24,14 +24,13 @@ namespace CosmicBot.Messages.Components
         private DateTime _startTime;
         private GameStatus Status = GameStatus.Pending;
         private string _startingGifUrl;
-        private IDisposable? _typing;
         public DanceOff() : base(null, true) 
         {
             var button = new MessageButton("Join Dance Battle", ButtonStyle.Success);
             button.OnPress += Join;
             Buttons.Add(button);
             _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dance battle")).Result;
-            _startTime = DateTime.UtcNow.AddDays(1);
+            _startTime = DateTime.UtcNow.AddHours(12);
         }
 
         public async Task Next(IMessageChannel channel)
@@ -52,7 +51,7 @@ namespace CosmicBot.Messages.Components
             } 
             else if (Status == GameStatus.InProgress)
             {
-                if (_survivors.Count == 1 && _dancers.Count <= 1)
+                if (_survivors.Count == 1 && _dancers.Count == 0)
                     await GameOver(GameStatus.Won, channel);
                 else
                     await PickOpponents(channel);
@@ -98,7 +97,7 @@ namespace CosmicBot.Messages.Components
                 .WithImageUrl(randomGif2);
 
             await channel.SendMessageAsync(embeds: [embedBuilder1.Build(), embedBuilder2.Build()]);
-            _typing = channel.EnterTypingState();
+            await channel.TriggerTypingAsync();
         }
 
         private async Task GameOver(GameStatus status, IMessageChannel channel)
@@ -118,8 +117,6 @@ namespace CosmicBot.Messages.Components
             Buttons.Clear();
             Expired = true;
             Status = status;
-            if(_typing != null)
-                _typing.Dispose();
         }
 
         private MessageResponse? Join(IInteractionContext context)
