@@ -85,13 +85,16 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Accept(IInteractionContext context)
         {
-            if(context.User.Id == _player2Id)
+            if (context.User.Id == _player2Id)
             {
                 Status = GameStatus.InProgress;
                 _turn = 1;
                 RollDice();
                 AddGameControls();
             }
+            else
+                return new MessageResponse("You can not accept you're own game invitation...", ephemeral: true);
+
             return null;
         }
 
@@ -102,6 +105,9 @@ namespace CosmicBot.Messages.Components
                 Status = GameStatus.Rejected;
                 Expired = true;
             }
+            else
+                return new MessageResponse("You can not deny you're own game invitation...", ephemeral: true);
+
             return null;
         }
 
@@ -124,26 +130,23 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Column1(IInteractionContext context)
         {
-            ColumnAction(context, 0);
-            return null;
+            return ColumnAction(context, 0);
         }
 
         private MessageResponse? Column2(IInteractionContext context)
         {
-            ColumnAction(context, 1);
-            return null;
+            return ColumnAction(context, 1);
         }
 
         private MessageResponse? Column3(IInteractionContext context)
         {
-            ColumnAction(context, 2);
-            return null;
+            return ColumnAction(context, 2);
         }
 
-        private void ColumnAction(IInteractionContext context, int column)
+        private MessageResponse? ColumnAction(IInteractionContext context, int column)
         {
             if (context == null)
-                return;
+                return null;
 
             if (_turn == 1 && context.User.Id == _userId)
             {
@@ -158,6 +161,7 @@ namespace CosmicBot.Messages.Components
                     RollDice();
                     DisableButtonsIfFull(_player2Board);
                 }
+                return null;
             }
             else if (_turn == 2 && context.User.Id == _player2Id)
             {
@@ -172,7 +176,10 @@ namespace CosmicBot.Messages.Components
                     RollDice();
                     DisableButtonsIfFull(_player1Board);
                 }
+                return null;
             }
+            else
+                return new MessageResponse("It is not your turn yet...", ephemeral: true);
         }
 
         private void DisableButtonsIfFull(Dice?[] board)

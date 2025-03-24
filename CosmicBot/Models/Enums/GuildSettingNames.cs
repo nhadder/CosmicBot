@@ -5,5 +5,6 @@
         public const string Timezone = "Timezone";
         public const string DanceBattleChannel = "DanceBattleChannel";
         public const string DanceBattleMessageId = "DanceBattleMessageId";
+        public const string BotChannel = "BotChannels";
     }
 }

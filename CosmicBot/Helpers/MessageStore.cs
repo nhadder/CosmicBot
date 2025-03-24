@@ -22,6 +22,11 @@ namespace CosmicBot.Helpers
             return _messages[messageId];
         }
 
+        public static List<EmbedMessage> GetMessagesOfType(Type type)
+        {
+            return _messages.Where(m => m.GetType() == type)?.Select(m => m.Value).ToList() ?? new List<EmbedMessage>();
+        }
+
         public static bool MessageExists(ulong messageId)
         {
             return _messages.ContainsKey(messageId);
