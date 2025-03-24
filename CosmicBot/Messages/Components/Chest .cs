@@ -53,7 +53,7 @@ namespace CosmicBot.Messages.Components
                 .WithDescription(":gift:").WithColor(Color.Gold);
             else if (!string.IsNullOrWhiteSpace(_user))
                 chest = new EmbedBuilder()
-                .WithDescription(string.Join(" ", Enumerable.Range(0, _amount).Select(s => ":star:")))
+                .WithDescription(":star:")
                 .WithFooter($"{_user} found a gift of {_amount} star(s)!");
             else
                 chest = new EmbedBuilder()
