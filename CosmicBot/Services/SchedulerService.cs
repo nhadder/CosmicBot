@@ -31,11 +31,12 @@ namespace CosmicBot.Service
                     var minecraftService = new MinecraftServerService(context);
                     var redditService = new RedditService(context);
                     var guildSettingsService = new GuildSettingsService(context);
+                    var playerService = new PlayerService(context, guildSettingsService);
 
                     await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
                     await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
                     await BotChannelGifts(guildSettingsService, socketClient);
-                    await DanceBattle(guildSettingsService, socketClient);
+                    await DanceBattle(guildSettingsService, socketClient, playerService);
                     await MessageStore.CheckForExpiredMessages(socketClient);
                 }
                 Thread.Sleep(TimeSpan.FromMinutes(1));
@@ -65,7 +66,7 @@ namespace CosmicBot.Service
             }
         }
 
-        private static async Task DanceBattle(GuildSettingsService settings, DiscordSocketClient socketClient)
+        private static async Task DanceBattle(GuildSettingsService settings, DiscordSocketClient socketClient, PlayerService playerService)
         {
             var guilds = socketClient.Guilds;
             foreach(var guild in guilds)
@@ -96,6 +97,9 @@ namespace CosmicBot.Service
                             if (message != null)
                             {
                                 await message.Next(channel);
+                                if (message.Awards.Any())
+                                    foreach (var award in message.Awards)
+                                        await playerService.Award(guild.Id, award.UserId, award.Points, award.Experience, award.GamesWon, award.GamesLost);
                                 await message.UpdateAsync(socketClient);
                             }
                         }
