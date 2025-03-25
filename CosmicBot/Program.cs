@@ -103,7 +103,21 @@ namespace CosmicBot
             if (Environment.GetCommandLineArgs().Any(arg => arg.Contains("ef")))
                 return;
 
+            var discordClient = host.Services.GetRequiredService<DiscordSocketClient>();
+            Console.CancelKeyPress += async (sender, e) =>
+            {
+                e.Cancel = true;
+                await ApplicationClosing(discordClient);
+                Environment.Exit(0);
+            };
+
             host.Run();
+        }
+
+        private async static Task ApplicationClosing(IDiscordClient client)
+        {
+            Logger.Log("Exit command initiated. Expiring all my known messages");
+            await MessageStore.ExpireAllMessages(client);
         }
 
         private static readonly DiscordSocketConfig _socketConfig = new()

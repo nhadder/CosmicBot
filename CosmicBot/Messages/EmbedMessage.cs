@@ -84,6 +84,17 @@ namespace CosmicBot.Messages
             await message.ModifyAsync(msg => { msg.Embeds = embeds; msg.Components = components; });
         }
 
+        public async Task DeleteAsync(IDiscordClient client)
+        {
+            if (await client.GetChannelAsync(_channelId) is IMessageChannel channel)
+            {
+                if (await channel.GetMessageAsync(_messageId) is IUserMessage userMessage)
+                {
+                    await userMessage.DeleteAsync();
+                }
+            }
+        }
+
         public async Task<MessageResponse?> HandleButtons(IInteractionContext context, SocketMessageComponent messageComponent)
         {
             if (Expired)

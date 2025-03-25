@@ -176,9 +176,10 @@ namespace CosmicBot.Messages.Components
                 if (_startTime != null)
                 {
                     var timeLeft = (TimeSpan)(_startTime - DateTime.UtcNow);
+                    var expired = Expired ? "\nThis message has expired" : string.Empty;
                     var embedBuilder = new EmbedBuilder()
                         .WithTitle("Dance Battle")
-                        .WithDescription(sb.ToString())
+                        .WithDescription(sb.ToString() + expired)
                         .WithImageUrl(_startingGifUrl)
                         .WithFields(new EmbedFieldBuilder()
                             .WithName("Prize")
