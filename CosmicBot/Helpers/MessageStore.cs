@@ -1,5 +1,4 @@
-﻿using CosmicBot.Commands;
-using CosmicBot.DiscordResponse;
+﻿using CosmicBot.DiscordResponse;
 using CosmicBot.Messages;
 using CosmicBot.Service;
 using Discord;
@@ -10,26 +9,39 @@ namespace CosmicBot.Helpers
     public static class MessageStore
     {
         private static readonly Dictionary<ulong, EmbedMessage> _messages = [];
+        private static object _lock = new object();
 
         public static async Task AddMessage(IDiscordClient client, ulong messageId, EmbedMessage message)
         {
             await CheckForExpiredMessages(client);
-            _messages[messageId] = message;
+            lock (_lock)
+            {
+                _messages[messageId] = message;
+            }
         }
 
         public static EmbedMessage GetMessage(ulong messageId)
         {
-            return _messages[messageId];
+            lock (_lock)
+            {
+                return _messages[messageId];
+            }
         }
 
         public static List<EmbedMessage> GetMessagesOfType(Type type)
         {
-            return _messages.Where(m => m.GetType() == type)?.Select(m => m.Value).ToList() ?? new List<EmbedMessage>();
+            lock (_lock)
+            {
+                return _messages.Where(m => m.GetType() == type)?.Select(m => m.Value).ToList() ?? new List<EmbedMessage>();
+            }
         }
 
         public static bool MessageExists(ulong messageId)
         {
-            return _messages.ContainsKey(messageId);
+            lock (_lock)
+            {
+                return _messages.ContainsKey(messageId);
+            }
         }
 
         public static async Task<MessageResponse?> HandleMessageButtons(IInteractionContext context, PlayerService playerService)
@@ -89,7 +101,10 @@ namespace CosmicBot.Helpers
 
         public static bool RemoveMessage(ulong messageId)
         {
-            return _messages.Remove(messageId);
+            lock (_lock)
+            {
+                return _messages.Remove(messageId);
+            }
         }
 
         public static async Task CheckForExpiredMessages(IDiscordClient client)

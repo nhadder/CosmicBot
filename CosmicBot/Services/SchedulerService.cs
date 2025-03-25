@@ -3,6 +3,7 @@ using CosmicBot.Helpers;
 using CosmicBot.Messages.Components;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -36,7 +37,7 @@ namespace CosmicBot.Service
                     await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
                     await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
                     await BotChannelGifts(guildSettingsService, socketClient);
-                    await DanceBattle(guildSettingsService, socketClient, playerService);
+                    await DanceBattle(guildSettingsService, socketClient, playerService, context);
                     await MessageStore.CheckForExpiredMessages(socketClient);
                 }
                 Thread.Sleep(TimeSpan.FromMinutes(1));
@@ -66,7 +67,7 @@ namespace CosmicBot.Service
             }
         }
 
-        private static async Task DanceBattle(GuildSettingsService settings, DiscordSocketClient socketClient, PlayerService playerService)
+        private static async Task DanceBattle(GuildSettingsService settings, DiscordSocketClient socketClient, PlayerService playerService, DataContext context)
         {
             var guilds = socketClient.Guilds;
             foreach(var guild in guilds)
@@ -81,14 +82,18 @@ namespace CosmicBot.Service
                     var messageId = settings.GetDanceBattleMessageId(guild.Id);
                     if(messageId == null)
                     {
-                        var danceBattle = await new DanceOff().SendAsync(socketClient, channel);
+                        var startTime = DateTime.UtcNow.AddHours(12);
+                        await settings.SetDanceBattleStartTime(guild.Id, startTime);
+                        var danceBattle = await new DanceOff(null, startTime).SendAsync(socketClient, channel);
                         await settings.SetDanceBattleMessageId(guild.Id, danceBattle);
                     }
                     else
                     {
+                        var previousMembers = await context.DanceBattleMembers.Where(d => d.GuildId == guild.Id).ToListAsync();
                         if (!MessageStore.MessageExists((ulong)messageId))
-                        {                      
-                            var newGame = await new DanceOff().SendAsync(socketClient, channel);
+                        {
+                            var startTime = settings.GetDanceBattleStartTime(guild.Id);
+                            var newGame = await new DanceOff(previousMembers, startTime).SendAsync(socketClient, channel);
                             await settings.SetDanceBattleMessageId(guild.Id, newGame);
                         }
                         else
@@ -97,9 +102,26 @@ namespace CosmicBot.Service
                             if (message != null)
                             {
                                 await message.Next(channel);
-                                if (message.Awards.Any())
-                                    foreach (var award in message.Awards)
-                                        await playerService.Award(guild.Id, award.UserId, award.Points, award.Experience, award.GamesWon, award.GamesLost);
+                                if (message.Status == Models.Enums.GameStatus.Won)
+                                {
+                                    if (previousMembers.Count > 0)
+                                    {
+                                        context.DanceBattleMembers.RemoveRange(previousMembers);
+                                        await context.SaveChangesAsync();
+                                    }
+
+                                    await settings.RemoveDanceBattleMessageId(guild.Id);
+
+                                    if (message.Awards.Count > 0)
+                                        foreach (var award in message.Awards)
+                                            await playerService.Award(guild.Id, award.UserId, award.Points, award.Experience, award.GamesWon, award.GamesLost);
+                                }
+                                else if (message.Status == Models.Enums.GameStatus.Pending)
+                                {
+                                    var newMembers = message.Dancers.Where(d => !previousMembers.Any(m => m.UserId == d.UserId));
+                                    await context.DanceBattleMembers.AddRangeAsync(newMembers);
+                                    await context.SaveChangesAsync();
+                                }
                                 await message.UpdateAsync(socketClient);
                             }
                         }
