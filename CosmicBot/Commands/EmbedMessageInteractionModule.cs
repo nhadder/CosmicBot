@@ -21,7 +21,23 @@ namespace CosmicBot.Commands
                 return;
             }
 
-            await Respond(await MessageStore.HandleMessageButtons(Context, _playerService));
+            MessageResponse? response = null;
+
+            try
+            {
+                response = await MessageStore.HandleMessageButtons(Context, _playerService);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"{ex.Message}: {ex.StackTrace}");
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                    Logger.Log($"{ex.Message}: {ex.StackTrace}");
+                }
+            }
+
+            await Respond(response);
         }
     }
 }

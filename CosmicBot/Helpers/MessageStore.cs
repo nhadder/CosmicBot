@@ -93,6 +93,14 @@ namespace CosmicBot.Helpers
                 }
                 else
                 {
+                    if (await context.Client.GetChannelAsync(context.Channel.Id) is IMessageChannel channel)
+                    {
+                        if (await channel.GetMessageAsync(messageComponent.Message.Id) is IUserMessage userMessage)
+                        {
+                            await userMessage.DeleteAsync();
+                        }
+                    }
+
                     return new MessageResponse("That message component has expired", ephemeral: true);
                 }
             }
@@ -116,6 +124,15 @@ namespace CosmicBot.Helpers
                     await message.Value.Expire(client);
                     RemoveMessage(message.Key);
                 }
+            }
+        }
+
+        public static async Task ExpireAllMessages(IDiscordClient client)
+        {
+            foreach (var message in _messages)
+            {
+                await message.Value.Expire(client);
+                RemoveMessage(message.Key);
             }
         }
     }

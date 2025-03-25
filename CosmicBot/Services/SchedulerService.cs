@@ -24,23 +24,35 @@ namespace CosmicBot.Service
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                using (var scope = _scopeFactory.CreateScope())
+                try
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    var socketClient = scope.ServiceProvider.GetRequiredService<DiscordSocketClient>();
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+                        var socketClient = scope.ServiceProvider.GetRequiredService<DiscordSocketClient>();
 
-                    var minecraftService = new MinecraftServerService(context);
-                    var redditService = new RedditService(context);
-                    var guildSettingsService = new GuildSettingsService(context);
-                    var playerService = new PlayerService(context, guildSettingsService);
+                        var minecraftService = new MinecraftServerService(context);
+                        var redditService = new RedditService(context);
+                        var guildSettingsService = new GuildSettingsService(context);
+                        var playerService = new PlayerService(context, guildSettingsService);
 
-                    await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
-                    await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
-                    await BotChannelGifts(guildSettingsService, socketClient);
-                    await DanceBattle(guildSettingsService, socketClient, playerService, context);
-                    await MessageStore.CheckForExpiredMessages(socketClient);
+                        await HandleMinecraftScheduledTasks(minecraftService, guildSettingsService, cancellationToken);
+                        await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
+                        await BotChannelGifts(guildSettingsService, socketClient);
+                        await DanceBattle(guildSettingsService, socketClient, playerService, context);
+                        await MessageStore.CheckForExpiredMessages(socketClient);
+                    }
+                    Thread.Sleep(TimeSpan.FromMinutes(1));
                 }
-                Thread.Sleep(TimeSpan.FromMinutes(1));
+                catch (Exception ex)
+                {
+                    Logger.Log($"{ex.Message}: {ex.StackTrace}");
+                    while(ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                        Logger.Log($"{ex.Message}: {ex.StackTrace}");
+                    }
+                }
             }
         }
 
