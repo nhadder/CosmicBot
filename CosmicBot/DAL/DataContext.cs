@@ -11,6 +11,7 @@ namespace CosmicBot.DAL
         public DbSet<RedditAutoPost> RedditAutoPosts { get; set; }
         public DbSet<GuildSetting> GuildSettings { get; set; }
         public DbSet<PlayerStats> PlayerStats { get; set; }
+        public DbSet<DanceBattleMember> DanceBattleMembers { get; set; }
 
         public DataContext(DbContextOptions<DataContext> options) : base(options) 
         {
@@ -48,6 +49,11 @@ namespace CosmicBot.DAL
             {
                 e.Property(m => m.PlayerId).ValueGeneratedOnAdd();
                 e.Property(m => m.UserId).IsRequired();
+            });
+
+            modelBuilder.Entity<DanceBattleMember>(e =>
+            {
+                e.HasKey(p => new { p.GuildId, p.UserId });
             });
         }
     }

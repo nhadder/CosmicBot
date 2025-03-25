@@ -1,5 +1,6 @@
 ﻿using CosmicBot.DiscordResponse;
 using CosmicBot.Helpers;
+using CosmicBot.Messages.Components;
 using CosmicBot.Service;
 using Discord;
 using Discord.Interactions;
@@ -98,6 +99,18 @@ namespace CosmicBot.Commands
 
                 await _service.RemoveDanceBattleSetting(Context.Guild.Id);
                 await Respond(new MessageResponse("Successful", ephemeral: true));
+            }
+
+            [SlashCommand("start", "Start a dance battle immediately")]
+            public async Task StartDanceBattle()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await new DanceOff(null, null).SendAsync(Context);
             }
         }
     }

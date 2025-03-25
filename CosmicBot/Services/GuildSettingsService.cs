@@ -61,6 +61,11 @@ namespace CosmicBot.Service
             return Convert.ToUInt64(setting);
         }
 
+        public async Task RemoveDanceBattleMessageId(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.DanceBattleMessageId);
+        }
+
         public async Task RemoveBotChannel(ulong guildId, ulong channelId)
         {
             var channels = GetBotChannels(guildId);
@@ -88,6 +93,19 @@ namespace CosmicBot.Service
             var setting = GetSetting(guildId, GuildSettingNames.BotChannel);
             if (string.IsNullOrEmpty(setting)) return null;
             return setting.Split(";").Select(c => Convert.ToUInt64(c)).ToList();
+        }
+
+        public async Task SetDanceBattleStartTime(ulong guildId, DateTime startTime)
+        {
+            await SetSetting(guildId, GuildSettingNames.DanceBattleStartTime, startTime.ToString());
+        }
+
+        public DateTime GetDanceBattleStartTime(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.DanceBattleStartTime);
+            if (DateTime.TryParse(setting, out var value))
+                return value;
+            return DateTime.UtcNow.AddHours(12);
         }
 
         #region Private Methods

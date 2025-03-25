@@ -6,5 +6,6 @@
         public const string DanceBattleChannel = "DanceBattleChannel";
         public const string DanceBattleMessageId = "DanceBattleMessageId";
         public const string BotChannel = "BotChannels";
+        public const string DanceBattleStartTime = "DanceBattleStartTime";
     }
 }

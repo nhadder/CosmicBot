@@ -9,37 +9,61 @@ namespace CosmicBot.Messages.Components
 {
     public class DanceOff : EmbedMessage
     {
-        private class UserInfo
-        {
-            public ulong Id { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public string ImageUrl { get; set; } = string.Empty;
-        }
-
-        private List<UserInfo> _dancers = new List<UserInfo>();
-        private List<UserInfo> _survivors = new List<UserInfo>();
-        private UserInfo? _player1;
-        private UserInfo? _player2;
-        private UserInfo? _winner;
-        private DateTime _startTime;
-        private GameStatus Status = GameStatus.Pending;
+        public List<DanceBattleMember> Dancers = new List<DanceBattleMember>();
+        private List<DanceBattleMember> _survivors = new List<DanceBattleMember>();
+        private DanceBattleMember? _player1;
+        private DanceBattleMember? _player2;
+        private DanceBattleMember? _winner;
+        private DateTime? _startTime;
+        public GameStatus Status = GameStatus.Pending;
         private string _startingGifUrl;
-        public DanceOff() : base(null, true) 
+        public DanceOff(List<DanceBattleMember>? previousJoiners, DateTime? start) : base(null, true) 
         {
+            if (previousJoiners != null && previousJoiners.Count > 0)
+            {
+                Dancers.AddRange(previousJoiners);
+            }
             var button = new MessageButton("Join Dance Battle", ButtonStyle.Success);
             button.OnPress += Join;
             Buttons.Add(button);
+
+            if (start == null)
+            {
+                _startTime = null;
+                var startButton = new MessageButton("Start", ButtonStyle.Secondary);
+                startButton.OnPress += Start;
+                Buttons.Add(startButton);
+            }
+            else
+                _startTime = start;
+
             _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dance battle")).Result;
-            _startTime = DateTime.UtcNow.AddHours(12);
+        }
+
+        private MessageResponse? Start(IInteractionContext context)
+        {
+            Task.Run(async () => await context.Interaction.DeferAsync()).Wait();
+            if (context != null)
+            {
+                while (!Expired)
+                {
+                    Task.Run(async () => {
+                        await Next(context.Channel);
+                        await UpdateAsync(context.Client);
+                        await Task.Delay(TimeSpan.FromMinutes(1));
+                    }).Wait();
+                }
+            }
+            return null;
         }
 
         public async Task Next(IMessageChannel channel)
         {
             if(Status == GameStatus.Pending)
             {
-                if (DateTime.UtcNow > _startTime)
+                if (_startTime == null || DateTime.UtcNow > _startTime)
                 {
-                    if (_dancers.Count < 2)
+                    if (Dancers.Count < 2)
                         await GameOver(GameStatus.Rejected, channel);
                     else
                     {
@@ -51,7 +75,7 @@ namespace CosmicBot.Messages.Components
             } 
             else if (Status == GameStatus.InProgress)
             {
-                if (_survivors.Count == 1 && _dancers.Count == 0)
+                if (_survivors.Count == 1 && Dancers.Count == 0)
                     await GameOver(GameStatus.Won, channel);
                 else
                     await PickOpponents(channel);
@@ -61,22 +85,22 @@ namespace CosmicBot.Messages.Components
         private async Task PickOpponents(IMessageChannel channel)
         {
             var rng = new Random();
-            if (_dancers.Count <= 1)
+            if (Dancers.Count <= 1)
             {
-                _dancers.AddRange(_survivors);
+                Dancers.AddRange(_survivors);
                 _survivors.Clear();
             }
 
-            _dancers = _dancers.OrderBy(_ => rng.Next()).ToList();
+            Dancers = Dancers.OrderBy(_ => rng.Next()).ToList();
 
-            if (_dancers.Count < 2) return;
+            if (Dancers.Count < 2) return;
 
-            _player1 = _dancers[0];
-            _player2 = _dancers[1];
+            _player1 = Dancers[0];
+            _player2 = Dancers[1];
 
             _survivors.Add(_player1);
-            _dancers.RemoveAt(0);
-            _dancers.RemoveAt(0);
+            Dancers.RemoveAt(0);
+            Dancers.RemoveAt(0);
 
             var randomGif = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("party dance")).Result;
             var embedBuilder1 = new EmbedBuilder()
@@ -84,7 +108,7 @@ namespace CosmicBot.Messages.Components
                     .WithUrl(_player1.ImageUrl)
                     .WithName($"{_player1.Name} won!")
                     .WithIconUrl(_player1.ImageUrl))
-                .WithDescription($"<@{_player1.Id}> {_winnerMessages.OrderBy(_ => rng.Next()).First()}")
+                .WithDescription($"<@{_player1.UserId}> {_winnerMessages.OrderBy(_ => rng.Next()).First()}")
                 .WithImageUrl(randomGif);
 
             var randomGif2 = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("bad dance")).Result;
@@ -93,7 +117,7 @@ namespace CosmicBot.Messages.Components
                     .WithUrl(_player2.ImageUrl)
                     .WithName($"{_player2.Name} lost")
                     .WithIconUrl(_player2.ImageUrl))
-                .WithDescription($"<@{_player2.Id}> {_loseMessages.OrderBy(_ => rng.Next()).First()}")
+                .WithDescription($"<@{_player2.UserId}> {_loseMessages.OrderBy(_ => rng.Next()).First()}")
                 .WithImageUrl(randomGif2);
 
             await channel.SendMessageAsync(embeds: [embedBuilder1.Build(), embedBuilder2.Build()]);
@@ -105,14 +129,14 @@ namespace CosmicBot.Messages.Components
             if (status == GameStatus.Won)
             {
                 _winner = _survivors.First();
-                Awards.Add(new PlayerAward(_winner.Id, 10_000, 10_000, 1, 0));
+                Awards.Add(new PlayerAward(_winner.UserId, 10_000, 10_000, 1, 0));
                 var embedBuilder = new EmbedBuilder()
                     .WithTitle($"Dance Battle - Winner {_winner.Name}")
                     .WithImageUrl(_winner.ImageUrl)
-                    .WithDescription($"<@{_winner.Id}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
+                    .WithDescription($"<@{_winner.UserId}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
 
                 await channel.SendMessageAsync(embed: embedBuilder.Build());
-                await channel.SendMessageAsync($"<@{_winner.Id}>");
+                await channel.SendMessageAsync($"<@{_winner.UserId}>");
             }
             Buttons.Clear();
             Expired = true;
@@ -121,11 +145,12 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Join(IInteractionContext context)
         {
-            if (!_dancers.Exists(d => d.Id == context.User.Id))
+            if (!Dancers.Exists(d => d.UserId == context.User.Id))
             {
-                _dancers.Add(new UserInfo
+                Dancers.Add(new DanceBattleMember
                 {
-                    Id = context.User.Id,
+                    GuildId = context.Guild.Id,
+                    UserId = context.User.Id,
                     Name = context.User.GlobalName,
                     ImageUrl = context.User.GetAvatarUrl()
                 });
@@ -148,22 +173,38 @@ namespace CosmicBot.Messages.Components
 
                 var sb = new StringBuilder();
                 sb.AppendLine("@everyone Join the party and face off on the dance floor!");
-                var timeLeft = _startTime - DateTime.UtcNow;
-                var embedBuilder = new EmbedBuilder()
-                    .WithTitle("Dance Battle")
-                    .WithDescription(sb.ToString())
-                    .WithImageUrl(_startingGifUrl)
-                    .WithFields(new EmbedFieldBuilder()
-                        .WithName("Prize")
-                        .WithValue($"**10,000** stars and **10,000** XP"),
-                    new EmbedFieldBuilder()
-                        .WithName("Time Left To Join")
-                        .WithValue($"{timeLeft.Hours} hours {timeLeft.Minutes} minutes"),
-                    new EmbedFieldBuilder()
-                        .WithName("Dancers Joined")
-                        .WithValue($"{_dancers.Count}"));
-
-                return [embedBuilder.Build()];
+                if (_startTime != null)
+                {
+                    var timeLeft = (TimeSpan)(_startTime - DateTime.UtcNow);
+                    var embedBuilder = new EmbedBuilder()
+                        .WithTitle("Dance Battle")
+                        .WithDescription(sb.ToString())
+                        .WithImageUrl(_startingGifUrl)
+                        .WithFields(new EmbedFieldBuilder()
+                            .WithName("Prize")
+                            .WithValue($"**10,000** stars and **10,000** XP"),
+                        new EmbedFieldBuilder()
+                            .WithName("Time Left To Join")
+                            .WithValue($"{timeLeft.Hours} hours {timeLeft.Minutes} minutes"),
+                        new EmbedFieldBuilder()
+                            .WithName("Dancers Joined")
+                            .WithValue($"{Dancers.Count}"));
+                    return [embedBuilder.Build()];
+                }
+                else
+                {
+                    var embedBuilder = new EmbedBuilder()
+                        .WithTitle("Dance Battle")
+                        .WithDescription(sb.ToString())
+                        .WithImageUrl(_startingGifUrl)
+                        .WithFields(new EmbedFieldBuilder()
+                            .WithName("Prize")
+                            .WithValue($"**10,000** stars and **10,000** XP"),
+                        new EmbedFieldBuilder()
+                            .WithName("Dancers Joined")
+                            .WithValue($"{Dancers.Count}"));
+                    return [embedBuilder.Build()];
+                }
             }
             else
             {
