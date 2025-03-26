@@ -143,7 +143,7 @@ namespace CosmicBot.Service
                 if (player.Points < 0)
                     player.Points = 0;
 
-                if (player.Points + points < Math.Abs(points ?? 0))
+                if (player.Points + points < 0)
                     pointsLeft = false;
 
                 _context.Update(player);
