@@ -115,6 +115,12 @@ namespace CosmicBot.Commands
                 return;
             }
 
+            if (player.Points < bet*2)
+            {
+                await Respond(new MessageResponse("You can not bet more than half of your stars", ephemeral: true));
+                return;
+            }
+
             await new Blackjack(Context, bet).SendAsync(Context);
         }
 
@@ -139,10 +145,23 @@ namespace CosmicBot.Commands
                 await Respond(new MessageResponse("You do not have enough points for that bet", ephemeral: true));
                 return;
             }
+
+            if (player.Points < bet * 2)
+            {
+                await Respond(new MessageResponse("You can not bet more than half of your stars", ephemeral: true));
+                return;
+            }
+
             var player2 = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, opponent.Id);
             if (player2.Points < bet)
             {
                 await Respond(new MessageResponse($"{opponent.GlobalName} does not have enough points for that bet", ephemeral: true));
+                return;
+            }
+
+            if (player2.Points < bet * 2)
+            {
+                await Respond(new MessageResponse($"{opponent.GlobalName} can not bet more than half of their stars", ephemeral: true));
                 return;
             }
 
@@ -170,10 +189,23 @@ namespace CosmicBot.Commands
                 await Respond(new MessageResponse("You do not have enough points for that bet", ephemeral: true));
                 return;
             }
+
+            if (player.Points < bet * 2)
+            {
+                await Respond(new MessageResponse("You can not bet more than half of your stars", ephemeral: true));
+                return;
+            }
+
             var player2 = await _playerService.GetPlayerStatsAsync(Context.Guild.Id, opponent.Id);
             if (player2.Points < bet)
             {
                 await Respond(new MessageResponse($"{opponent.GlobalName} does not have enough points for that bet", ephemeral: true));
+                return;
+            }
+
+            if (player2.Points < bet * 2)
+            {
+                await Respond(new MessageResponse($"{opponent.GlobalName} can not bet more than half of their stars", ephemeral: true));
                 return;
             }
 
