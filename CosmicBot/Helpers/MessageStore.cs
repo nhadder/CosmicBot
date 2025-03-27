@@ -1,6 +1,8 @@
 ﻿using CosmicBot.DiscordResponse;
 using CosmicBot.Messages;
+using CosmicBot.Messages.Components;
 using CosmicBot.Service;
+using CosmicBot.Services;
 using Discord;
 using Discord.WebSocket;
 
@@ -44,7 +46,7 @@ namespace CosmicBot.Helpers
             }
         }
 
-        public static async Task<MessageResponse?> HandleMessageButtons(IInteractionContext context, PlayerService playerService)
+        public static async Task<MessageResponse?> HandleMessageButtons(IInteractionContext context, PlayerService playerService, PetService petService)
         {
             await CheckForExpiredMessages(context.Client);
             if (context.Interaction is SocketMessageComponent messageComponent)
@@ -84,6 +86,13 @@ namespace CosmicBot.Helpers
                             RemoveMessage(messageComponent.Message.Id);
                             return new MessageResponse("Not enough stars to play again...", ephemeral: true);
                         }
+                    }
+
+                    if (message is PetGame)
+                    {
+                        var petGame = message as PetGame;
+                        if(petGame != null) 
+                            await petService.Update(petGame.Pet);
                     }
                     
                     if(message.Expired)
