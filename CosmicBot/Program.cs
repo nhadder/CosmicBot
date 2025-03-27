@@ -2,6 +2,7 @@
 using CosmicBot.DAL;
 using CosmicBot.Helpers;
 using CosmicBot.Service;
+using CosmicBot.Services;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -67,6 +68,7 @@ namespace CosmicBot
                     .AddScoped<MinecraftServerService>()
                     .AddScoped<GuildSettingsService>()
                     .AddScoped<PlayerService>()
+                    .AddScoped<PetService>()
                     //Command Modules
                     .AddScoped<MinecraftListCommandModule>()
                     .AddScoped<MinecraftServerCommandModule>()

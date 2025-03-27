@@ -12,6 +12,7 @@ namespace CosmicBot.DAL
         public DbSet<GuildSetting> GuildSettings { get; set; }
         public DbSet<PlayerStats> PlayerStats { get; set; }
         public DbSet<DanceBattleMember> DanceBattleMembers { get; set; }
+        public DbSet<Pet> Pets { get; set; }
 
         public DataContext(DbContextOptions<DataContext> options) : base(options) 
         {
@@ -54,6 +55,19 @@ namespace CosmicBot.DAL
             modelBuilder.Entity<DanceBattleMember>(e =>
             {
                 e.HasKey(p => new { p.GuildId, p.UserId });
+            });
+
+            modelBuilder.Entity<Pet>(e =>
+            {
+                e.HasKey(m => m.Id);
+                e.Property(m => m.Id).ValueGeneratedOnAdd();
+
+                e.Ignore(m => m.Feeling);
+                e.Ignore(m => m.Dead);
+                e.Ignore(m => m.Dirty);
+                e.Ignore(m => m.Age);
+                e.Ignore(m => m.Full);
+                e.Ignore(m => m.Tired);
             });
         }
     }

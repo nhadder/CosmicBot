@@ -1,15 +1,18 @@
 ﻿using CosmicBot.DiscordResponse;
 using CosmicBot.Helpers;
 using CosmicBot.Service;
+using CosmicBot.Services;
 using Discord.Interactions;
 namespace CosmicBot.Commands
 {
     public class EmbedMessageInteractionModule : CommandModule
     {
         private readonly PlayerService _playerService;
-        public EmbedMessageInteractionModule(PlayerService playerService) 
+        private readonly PetService _petService;
+        public EmbedMessageInteractionModule(PlayerService playerService, PetService petService) 
         {
             _playerService = playerService;
+            _petService = petService;
         }
 
         [ComponentInteraction("button_*")]
@@ -25,7 +28,7 @@ namespace CosmicBot.Commands
 
             try
             {
-                response = await MessageStore.HandleMessageButtons(Context, _playerService);
+                response = await MessageStore.HandleMessageButtons(Context, _playerService, _petService);
             }
             catch (Exception ex)
             {
