@@ -275,7 +275,7 @@ namespace CosmicBot.Commands
                     return;
                 }
 
-                await _playerService.Award(Context.Guild.Id, Context.User.Id, -10_000);
+                await _playerService.Award(Context.Guild.Id, Context.User.Id, -500);
                 await Respond(response);
             }
 
