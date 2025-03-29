@@ -18,9 +18,9 @@ namespace CosmicBot.Models
         public bool Sold { get; set; } = false;
 
         public int Age => Convert.ToInt32((DateTime.UtcNow - Birthday).TotalDays);
-        private TimeSpan TimeSinceLastPlayed => DateTime.UtcNow - LastPlayed;
+        public TimeSpan TimeSinceLastPlayed => DateTime.UtcNow - LastPlayed;
         private TimeSpan TimeSinceLastFed => DateTime.UtcNow - LastFed;
-        private TimeSpan TimeSinceLastCleaned => DateTime.UtcNow - LastCleaned;
+        public TimeSpan TimeSinceLastCleaned => DateTime.UtcNow - LastCleaned;
 
         public string Feeling => Dead ? "Dead" : Dirty ? "Dirty" : Hungry ? "Hungry" : Happy ? "Happy" : "Sad";
 

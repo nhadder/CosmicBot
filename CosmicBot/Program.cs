@@ -79,6 +79,7 @@ namespace CosmicBot
                     .AddScoped<PlayerGameCommandModule>()
                     .AddScoped<SettingsCommandModule>()
                     .AddScoped<EmbedMessageInteractionModule>()
+                    .AddScoped<GifCommandModule>()
                     //Hosted Services
                     .AddHostedService<SchedulerService>();
                 })

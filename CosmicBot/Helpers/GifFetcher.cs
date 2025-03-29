@@ -1,8 +1,10 @@
-﻿using System.Net.Http.Json;
+﻿using CosmicBot.DiscordResponse;
+using Discord;
+using System.Net.Http.Json;
 
 namespace CosmicBot.Helpers
 {
-    public static class TenorGifFetcher
+    public static class GifFetcher
     {
         private static string _key = "dlNfvgmQL6Am4Leym7p3tX3oDgeni8qA";
         private static Uri _baseAddress = new Uri("https://api.giphy.com/v1/gifs/");
@@ -45,6 +47,17 @@ namespace CosmicBot.Helpers
 
                 return gif.Data?.Images?.Fixed_height?.Url ?? string.Empty;
             }
+        }
+
+        public async static Task<MessageResponse> GetGifMessage(string tags)
+        {
+            var url = await GetRandomGifUrl(tags);
+
+            var builder = new EmbedBuilder()
+                .WithImageUrl(url)
+                .WithFooter(tags);
+
+            return new MessageResponse(embed: builder.Build());
         }
     }
 }
