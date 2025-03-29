@@ -37,7 +37,7 @@ namespace CosmicBot.Messages.Components
             else
                 _startTime = start;
 
-            _startingGifUrl = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("dance battle")).Result;
+            _startingGifUrl = Task.Run(async () => await GifFetcher.GetRandomGifUrl("dance battle")).Result;
         }
 
         private MessageResponse? Start(IInteractionContext context)
@@ -102,20 +102,20 @@ namespace CosmicBot.Messages.Components
             Dancers.RemoveAt(0);
             Dancers.RemoveAt(0);
 
-            var randomGif = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("party dance")).Result;
+            var randomGif = Task.Run(async () => await GifFetcher.GetRandomGifUrl("dance party")).Result;
             var embedBuilder1 = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithUrl(_player1.ImageUrl)
-                    .WithName($"{_player1.Name} won!")
+                    .WithName($"{_player1.Name} survived this round!")
                     .WithIconUrl(_player1.ImageUrl))
                 .WithDescription($"<@{_player1.UserId}> {_winnerMessages.OrderBy(_ => rng.Next()).First()}")
                 .WithImageUrl(randomGif);
 
-            var randomGif2 = Task.Run(async () => await TenorGifFetcher.GetRandomGifUrl("bad dance")).Result;
+            var randomGif2 = Task.Run(async () => await GifFetcher.GetRandomGifUrl("bad dance")).Result;
             var embedBuilder2 = new EmbedBuilder()
                 .WithAuthor(new EmbedAuthorBuilder()
                     .WithUrl(_player2.ImageUrl)
-                    .WithName($"{_player2.Name} lost")
+                    .WithName($"{_player2.Name} lost...")
                     .WithIconUrl(_player2.ImageUrl))
                 .WithDescription($"<@{_player2.UserId}> {_loseMessages.OrderBy(_ => rng.Next()).First()}")
                 .WithImageUrl(randomGif2);
@@ -224,7 +224,12 @@ namespace CosmicBot.Messages.Components
             "couldn't keep up to the beat.",
             "danced like a grandma.",
             "was no match against the master.",
-            "lost but had some...*interesting* moves at least."
+            "lost but had some...*interesting* moves at least.",
+            "at least tried their best...",
+            "received a round of applause",
+            "has definetely been practicing at home",
+            "inspired the crowd to join in their awesome dance move",
+            "made everyone jealous with their epic dance moves"
         };
 
         private List<string> _winnerMessages = new List<string>()
@@ -235,7 +240,12 @@ namespace CosmicBot.Messages.Components
             "shuffled all the way to the top!",
             "set the dance floor on fire!",
             "had some fresh moves. Nobody had seen any dancing this cool before.",
-            "*REALLY* knows what they're doing!"
+            "*REALLY* knows what they're doing!",
+            "wiped out the competition with some funky fresh moves!",
+            "was booed off the dance floor",
+            "needs to work on that move some more...",
+            "made the crowd disappear and now the bar in the back is too crowded",
+            "made everyone question the definition of \"dancing\""
         };
     }   
 }

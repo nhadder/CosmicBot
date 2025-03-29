@@ -62,7 +62,20 @@ namespace CosmicBot.Messages.Components
             }
             else
             {
-                _lastAction = $"You threw a ball to {Pet.Name}.\nThey brought it back.";
+                if (Pet.TimeSinceLastPlayed.TotalHours > 1)
+                {
+                    var rng = new Random();
+                    if(rng.Next(3) == 0)
+                    {
+                        var stars = rng.Next(101);
+                        Awards.Add(new PlayerAward(_user.Id, stars, 0, 0, 0));
+                        _lastAction = $"You threw a ball to {Pet.Name}.\nThey brought back some stars!\nYou received **{stars}** stars!";
+                    }
+                    else
+                        _lastAction = $"You threw a ball to {Pet.Name}.\nThey brought it back.";
+                }
+                else
+                    _lastAction = $"You threw a ball to {Pet.Name}.\nThey brought it back.";
             }
             Pet.LastPlayed = DateTime.UtcNow;
             RefreshButtons();
@@ -73,7 +86,20 @@ namespace CosmicBot.Messages.Components
         {
             if (!Pet.Dirty)
             {
-                _lastAction = $"You cleaned out {Pet.Name}'s room.\nNothing changed...";
+                if (Pet.TimeSinceLastCleaned.TotalDays > 1)
+                {
+                    var rng = new Random();
+                    if (rng.Next(2) == 0)
+                    {
+                        var stars = rng.Next(501);
+                        Awards.Add(new PlayerAward(_user.Id, stars, 0, 0, 0));
+                        _lastAction = $"You cleaned out {Pet.Name}'s room.\nYou found some stars!\nYou received **{stars}** stars!";
+                    }
+                    else
+                        _lastAction = $"You cleaned out {Pet.Name}'s room.\nNothing changed...";
+                }
+                else
+                    _lastAction = $"You cleaned out {Pet.Name}'s room.\nNothing changed...";
             }
             else
             {

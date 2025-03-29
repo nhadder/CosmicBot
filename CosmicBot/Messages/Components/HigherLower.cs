@@ -38,7 +38,10 @@ namespace CosmicBot.Messages.Components
             var lowerButton = new MessageButton("Lower", ButtonStyle.Danger);
             lowerButton.OnPress = Lower;
             Buttons.Add(lowerButton);
+        }
 
+        public void AddSurrenderOption()
+        {
             var SurrenderButton = new MessageButton("Surrender", ButtonStyle.Primary);
             SurrenderButton.OnPress = Surrender;
             Buttons.Add(SurrenderButton);
@@ -64,11 +67,14 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Higher(IInteractionContext context)
         {
+            if (_streak == 0)
+                AddSurrenderOption();
+
             var lastCard =_cards.Last();
             var newCard = DealCards(1).First();
             _cards.Add(newCard);
 
-            if (((int)newCard.Number) <= ((int)lastCard.Number))
+            if (((int)newCard.Number) < ((int)lastCard.Number))
                 GameOver(GameStatus.Lost);
             else
                 _streak++;
@@ -78,11 +84,14 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? Lower(IInteractionContext context)
         {
+            if (_streak == 0)
+                AddSurrenderOption();
+
             var lastCard = _cards.Last();
             var newCard = DealCards(1).First();
             _cards.Add(newCard);
 
-            if (((int)newCard.Number) >= ((int)lastCard.Number))
+            if (((int)newCard.Number) > ((int)lastCard.Number))
                 GameOver(GameStatus.Lost);
             else
                 _streak++;
