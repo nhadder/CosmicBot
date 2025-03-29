@@ -226,10 +226,11 @@ namespace CosmicBot.Messages.Components
             "was no match against the master.",
             "lost but had some...*interesting* moves at least.",
             "at least tried their best...",
-            "received a round of applause",
-            "has definetely been practicing at home",
-            "inspired the crowd to join in their awesome dance move",
-            "made everyone jealous with their epic dance moves"
+            "was booed off the dance floor",
+            "needs to work on that move some more...",
+            "made the crowd disappear and now the bar in the back is too crowded",
+            "made everyone question the definition of \"dancing\"",
+
         };
 
         private List<string> _winnerMessages = new List<string>()
@@ -242,10 +243,10 @@ namespace CosmicBot.Messages.Components
             "had some fresh moves. Nobody had seen any dancing this cool before.",
             "*REALLY* knows what they're doing!",
             "wiped out the competition with some funky fresh moves!",
-            "was booed off the dance floor",
-            "needs to work on that move some more...",
-            "made the crowd disappear and now the bar in the back is too crowded",
-            "made everyone question the definition of \"dancing\""
+            "received a round of applause",
+            "has definetely been practicing at home",
+            "inspired the crowd to join in their awesome dance move",
+            "made everyone jealous with their epic dance moves"
         };
     }   
 }
