@@ -104,8 +104,9 @@ namespace CosmicBot.Messages.Components
             }
             else if (total == 21)
                 return Stand(context);
+            else
+                DoButtons();
 
-            DoButtons();
             return null;
         }
 
