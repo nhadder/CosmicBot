@@ -108,7 +108,7 @@ namespace CosmicBot.Messages.Components
         private void GameOver(GameStatus status)
         {
             if(status == GameStatus.Won)
-                Awards.Add(new PlayerAward(_userId, Convert.ToInt64(Math.Pow(_streak, 2)), 20 * _streak, 1, 0));
+                Awards.Add(new PlayerAward(_userId, Convert.ToInt64(Math.Pow(2, _streak)), 20 * _streak, 1, 0));
 
             Status = status;
 
@@ -124,11 +124,11 @@ namespace CosmicBot.Messages.Components
 
             var result = string.Empty;
             if (Status == GameStatus.Won)
-                result = $"**Result**\nYou won! You gained **{Math.Pow(_streak, 2)}** stars and **{_streak * 20}** XP!";
+                result = $"**Result**\nYou won! You gained **{Math.Pow(2, _streak)}** stars and **{_streak * 20}** XP!";
             if (Status == GameStatus.Lost)
                 result = $"**Result**\nYou lose!";
-            if (Status == GameStatus.InProgress)
-                result = $"Surrender for **{Math.Pow(_streak, 2)}** stars and **{_streak * 20}** XP";
+            if (Status == GameStatus.InProgress && _streak > 0)
+                result = $"Surrender for **{Math.Pow(2, _streak)}** stars and **{_streak * 20}** XP";
                 var sb = new StringBuilder();
             sb.Append("```");
             sb.AppendLine(cards);
