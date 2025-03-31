@@ -10,13 +10,19 @@ namespace CosmicBot.Messages.Components
     public class Blackjack : EmbedMessage
     {
         private List<PlayingCard> _dealerCards = [];
-        private List<PlayingCard> _userCards = [];
+        private List<Hand> _userHands = [];
+        private int _activeHand = 0;
         private readonly string _username;
         private readonly string _iconUrl;
         private readonly ulong _userId;
-        private GameStatus Status;
         private readonly long _bet;
-        private bool _doubled = false;
+
+        private class Hand
+        {
+            public List<PlayingCard> Cards { get; set; } = new List<PlayingCard>();
+            public bool Doubled { get; set; } = false;
+            public GameStatus Status { get; set; } = GameStatus.InProgress;
+        }
 
         public Blackjack(IInteractionContext context, long bet) : base([context.User.Id])
         {
@@ -30,25 +36,36 @@ namespace CosmicBot.Messages.Components
 
         private void SetupGame(IInteractionContext context)
         {
-            Status = GameStatus.InProgress;
-            _userCards.Clear();
+            _userHands.Clear();
             _dealerCards.Clear();
-            _doubled = false;
-            _userCards = DealCards(2);
+            _userHands.Add(new Hand { Cards = DealCards(2) });
             _dealerCards = DealCards(1);
+            _activeHand = 0;
+            DoButtons();
+        }
 
-            if (GetTotal(_userCards) != 21)
+        private void DoButtons()
+        {
+            Buttons.Clear();
+            if (GetTotal(_userHands[_activeHand].Cards) != 21)
             {
-                var hitButton = new MessageButton("Hit", ButtonStyle.Success);
+                var hitButton = new MessageButton("Hit", ButtonStyle.Success, 0);
                 hitButton.OnPress = Hit;
                 Buttons.Add(hitButton);
 
-                var doubleButton = new MessageButton("Double Down", ButtonStyle.Primary);
+                var doubleButton = new MessageButton("Double Down", ButtonStyle.Primary, 1);
                 doubleButton.OnPress = DoubleDown;
                 Buttons.Add(doubleButton);
+
+                if (CanSplit(_userHands[_activeHand].Cards))
+                {
+                    var splitButton = new MessageButton("Split", ButtonStyle.Primary, 1);
+                    splitButton.OnPress = Split;
+                    Buttons.Add(splitButton);
+                }
             }
 
-            var standButton = new MessageButton("Stand", ButtonStyle.Danger);
+            var standButton = new MessageButton("Stand", ButtonStyle.Danger, 0);
             standButton.OnPress = Stand;
             Buttons.Add(standButton);
         }
@@ -66,40 +83,69 @@ namespace CosmicBot.Messages.Components
 
         private MessageResponse? PlayAgain(IInteractionContext context)
         {
-            Buttons.Clear();
             SetupGame(context);
             return null;
         }
 
         private MessageResponse? Hit(IInteractionContext context)
         {
-            _userCards.AddRange(DealCards(1));
+            _userHands[_activeHand].Cards.AddRange(DealCards(1));
 
-            var total = GetTotal(_userCards);
+            var total = GetTotal(_userHands[_activeHand].Cards);
             if (total > 21)
-                GameOver(GameStatus.Lost);
-            else if(total == 21)
-                Stand(context);
+            {
+                if(_activeHand <  _userHands.Count - 1)
+                {
+                    _activeHand++;
+                    Hit(context);
+                }
+                else
+                    GameOver();
+            }
+            else if (total == 21)
+                return Stand(context);
 
+            DoButtons();
             return null;
+        }
+
+        private MessageResponse? Split(IInteractionContext context)
+        {
+            var firstHand = new List<PlayingCard>
+            {
+                _userHands[_activeHand].Cards[0]
+            };
+            var secondHand = new List<PlayingCard>
+            {
+                _userHands[_activeHand].Cards[1]
+            };
+            _userHands[_activeHand].Cards = firstHand;
+            _userHands.Add(new Hand { Cards = secondHand });
+
+            return Hit(context);
         }
 
         private MessageResponse? DoubleDown(IInteractionContext context)
         {
-            _doubled = true;
-            _userCards.AddRange(DealCards(1));
-
-            var total = GetTotal(_userCards);
-            if (total > 21)
-            {
-                GameOver(GameStatus.Lost);
-                return null;
-            }
-            
+            _userHands[_activeHand].Doubled = true;
+            _userHands[_activeHand].Cards.AddRange(DealCards(1));
             return Stand(context);
         }
 
         private MessageResponse? Stand(IInteractionContext context)
+        {
+            if (_activeHand < _userHands.Count - 1)
+            {
+                _activeHand++;
+                Hit(context);
+            }
+            else
+                GameOver();
+
+            return null;
+        }
+
+        private void GameOver()
         {
             var dealerTotal = GetTotal(_dealerCards);
             while (dealerTotal < 17)
@@ -108,29 +154,27 @@ namespace CosmicBot.Messages.Components
                 dealerTotal = GetTotal(_dealerCards);
             }
 
-            var userTotal = GetTotal(_userCards);
+            foreach (var hand in _userHands)
+            {
+                var userTotal = GetTotal(hand.Cards);
 
-            if (dealerTotal > 21 || dealerTotal < userTotal)
-                GameOver(GameStatus.Won);
-            else if (dealerTotal > userTotal)
-                GameOver(GameStatus.Lost);
-            else
-                GameOver(GameStatus.Tie);
+                if (userTotal > 21)
+                    hand.Status = GameStatus.Lost;
+                else if (dealerTotal > 21 || dealerTotal < userTotal)
+                    hand.Status = GameStatus.Won;
+                else if (dealerTotal > userTotal)
+                    hand.Status = GameStatus.Lost;
+                else
+                    hand.Status = GameStatus.Tie;
 
-            return null;
-        }
-
-        private void GameOver(GameStatus status)
-        {
-            var bonus = _doubled ? _bet : 0;
-            if(status == GameStatus.Won)
-                Awards.Add(new PlayerAward(_userId, _bet + bonus, 20, 1, 0));
-            if(status == GameStatus.Lost)
-                Awards.Add(new PlayerAward(_userId, -_bet - bonus, 5, 0, 1));
-            if(status == GameStatus.Tie)
-                Awards.Add(new PlayerAward(_userId, 0, 10, 0, 0));
-
-            Status = status;
+                var bonus = hand.Doubled ? _bet : 0;
+                if (hand.Status == GameStatus.Won)
+                    Awards.Add(new PlayerAward(_userId, _bet + bonus, 20, 1, 0));
+                if (hand.Status == GameStatus.Lost)
+                    Awards.Add(new PlayerAward(_userId, -_bet - bonus, 5, 0, 1));
+                if (hand.Status == GameStatus.Tie)
+                    Awards.Add(new PlayerAward(_userId, 0, 10, 0, 0));
+            }
 
             Buttons.Clear();
             var tryAgainButton = new MessageButton("Play Again?", ButtonStyle.Secondary);
@@ -140,36 +184,56 @@ namespace CosmicBot.Messages.Components
 
         private string GetGameWindow()
         {
-            var playerCards = string.Join(" ", _userCards.Select(c => c.ToString()));
             var playerCardsHeader = "Your Cards";
-            var userTotal = $"Total: {GetTotal(_userCards)}";
+            var playerWidth = 13;
+            var handCardStrings = new List<string>();
+            var handTotalStrings = new List<string>();
+            var results = new List<string>();
+            foreach (var hand in _userHands)
+            {
+                var playerCards = string.Join(" ", hand.Cards.Select(c => c.ToString()));
+                var userTotal = $"Total: {GetTotal(hand.Cards)}";
+                playerWidth = Math.Max(playerCards.Length + 2, 13);
+                handCardStrings.Add(playerCards);
+                handTotalStrings.Add(userTotal);
+                var bonus = hand.Doubled ? _bet : 0;
+                if (hand.Status == GameStatus.Won)
+                    results.Add($"You won! You gained **{_bet + bonus}** stars and **20** XP!");
+                if (hand.Status == GameStatus.Lost)
+                    results.Add($"You lose! You lost **{_bet + bonus}** stars and gained **5** XP!");
+                if (hand.Status == GameStatus.Tie)
+                    results.Add($"Push. You gained **10** XP!");
+            }
 
-            var dealerCards = Status == GameStatus.InProgress ?
+            var dealerCards = _dealerCards.Count == 1 ?
                 _dealerCards.First().ToString() + " ?" :
                 string.Join(" ", _dealerCards.Select(c => c.ToString()));
             var dealerCardsHeader = "Dealer's Cards";
-            var dealerTotal = "Total: " + (Status == GameStatus.InProgress ?
-                GetTotal(_dealerCards.Take(1).ToList()).ToString() :
-                GetTotal(_dealerCards).ToString());
+            var dealerTotal = "Total: " + GetTotal(_dealerCards).ToString();
 
-            var bonus = _doubled ? _bet : 0;
-            var result = string.Empty;
-            if (Status == GameStatus.Won)
-                result = $"You won! You gained **{_bet+bonus}** stars and **20** XP!";
-            if (Status == GameStatus.Lost)
-                result = $"You lose! You lost **{_bet+bonus}** stars and gained **5** XP!";
-            if (Status == GameStatus.Tie)
-                result = $"Push. You gained **10** XP!";
-
-            var playerWidth = Math.Max(playerCards.Length + 1, 13);
             var sb = new StringBuilder();
-            sb.AppendLine("```" + playerCardsHeader.PadRight(playerWidth) + " " + dealerCardsHeader);
-            sb.AppendLine(playerCards.PadRight(playerWidth) + " " + dealerCards);
-            sb.AppendLine(userTotal.PadRight(playerWidth) + " " + dealerTotal + "```");
-            if (!string.IsNullOrWhiteSpace(result))
+            sb.Append("```");
+            sb.AppendLine(playerCardsHeader.PadRight(playerWidth) + " " + dealerCardsHeader);
+            var firstActive = _userHands.Count > 1 && _activeHand == 0 ? ">" : string.Empty;
+            sb.AppendLine(firstActive + handCardStrings[0].PadRight(playerWidth) + " " + dealerCards);
+            sb.AppendLine(handTotalStrings[0].PadRight(playerWidth) + " " + dealerTotal);
+            if(_userHands.Count > 1)
+            {
+                for(var i = 1; i < handCardStrings.Count; i++)
+                {
+                    sb.AppendLine();
+                    if (_activeHand == i)
+                        sb.Append('>');
+                    sb.AppendLine(handCardStrings[i]);
+                    sb.AppendLine(handTotalStrings[i]);
+                }
+            }
+            sb.Append("```");
+            if (results.Any())
             {
                 sb.AppendLine("**Result**");
-                sb.AppendLine(result);
+                foreach(var result in results)
+                    sb.AppendLine(result);
             }
 
             if (Expired)
@@ -191,6 +255,11 @@ namespace CosmicBot.Messages.Components
                 });
             }
             return cards;
+        }
+
+        private static bool CanSplit(List<PlayingCard> cards)
+        {
+            return (cards.Count == 2 && (int)cards[0].Number == (int)cards[1].Number);
         }
 
         private static int GetTotal(List<PlayingCard> cards)
