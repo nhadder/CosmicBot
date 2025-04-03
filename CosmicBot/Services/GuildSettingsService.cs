@@ -108,6 +108,42 @@ namespace CosmicBot.Service
             return DateTime.UtcNow.AddHours(12);
         }
 
+        public ulong? GetCreatePrivateVoiceChannelId(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.CreatePrivateVoiceChannel);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveCreatePrivateVoiceChannelId(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.CreatePrivateVoiceChannel);
+        }
+
+        public async Task SetCreatePrivateVoiceChannelId(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.CreatePrivateVoiceChannel, channelId.ToString());
+        }
+
+        public ulong? GetModBotChannel(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.ModBotChannel);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveModBotChannel(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.ModBotChannel);
+        }
+
+        public async Task SetModBotChannel(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.ModBotChannel, channelId.ToString());
+        }
+
         #region Private Methods
 
         private async Task SetSetting(ulong guildId, string key, string value)

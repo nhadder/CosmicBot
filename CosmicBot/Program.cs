@@ -121,6 +121,7 @@ namespace CosmicBot
         {
             Logger.Log("Exit command initiated. Expiring all my known messages");
             await MessageStore.ExpireAllMessages(client);
+            await ChannelStore.ExpireAllMessages(client);
         }
 
         private static readonly DiscordSocketConfig _socketConfig = new()
@@ -129,7 +130,9 @@ namespace CosmicBot
             | GatewayIntents.GuildMessages
             | GatewayIntents.GuildMessageReactions
             | GatewayIntents.GuildEmojis
-            | GatewayIntents.Guilds,
+            | GatewayIntents.Guilds
+            | GatewayIntents.GuildVoiceStates
+            | GatewayIntents.GuildMessageTyping,
             AlwaysDownloadUsers = true,
         };
 

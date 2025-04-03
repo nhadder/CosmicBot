@@ -13,9 +13,8 @@ namespace CosmicBot.Helpers
         private static readonly Dictionary<ulong, EmbedMessage> _messages = [];
         private static object _lock = new object();
 
-        public static async Task AddMessage(IDiscordClient client, ulong messageId, EmbedMessage message)
+        public static void AddMessage(IDiscordClient client, ulong messageId, EmbedMessage message)
         {
-            await CheckForExpiredMessages(client);
             lock (_lock)
             {
                 _messages[messageId] = message;

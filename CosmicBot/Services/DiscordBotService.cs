@@ -1,8 +1,10 @@
 ﻿using CosmicBot.Helpers;
+using CosmicBot.Messages;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace CosmicBot.Service
@@ -34,6 +36,8 @@ namespace CosmicBot.Service
             _client.Log += Logger.LogAsync;
             _client.Ready += ReadyAsync;
             _client.InteractionCreated += HandleInteraction;
+            _client.UserVoiceStateUpdated += HandleVoiceStateUpdated;
+            _client.UserLeft += HandleUserLeft;
 
             await _client.LoginAsync(TokenType.Bot, _configuration["DISCORD_BOT_TOKEN"]);
             await _client.StartAsync();
@@ -82,6 +86,43 @@ namespace CosmicBot.Service
                         await Logger.LogAsync($"Unknown error: {result.ErrorReason}");
                         break;
                 }
+        }
+
+        private async Task HandleVoiceStateUpdated(SocketUser user, SocketVoiceState before, SocketVoiceState after)
+        {
+            await ChannelStore.CheckForExpiredMessages(_client);
+            if (after.VoiceChannel != null)
+            {
+                var guildSettings = _services.GetRequiredService<GuildSettingsService>();
+                await ChannelStore.HandleUserJoinedVoiceChannel(_client, guildSettings, user, after.VoiceChannel);
+            }
+            else if (before.VoiceChannel != null && after.VoiceChannel == null)
+            {
+                await ChannelStore.CheckForExpiredMessages(_client);
+            }
+        }
+
+        private async Task HandleUserLeft(SocketGuild guild, SocketUser user)
+        {
+            var guildSettings = _services.GetRequiredService<GuildSettingsService>();
+            var setting = guildSettings.GetModBotChannel(guild.Id);
+            if(setting != null)
+            {
+                var channel = await _client.GetChannelAsync((ulong)setting) as ITextChannel;
+                if (channel != null)
+                {
+                    var builder = new EmbedBuilder()
+                        .WithAuthor(new EmbedAuthorBuilder()
+                            .WithName($"{user.GlobalName}")
+                            .WithIconUrl(user.GetAvatarUrl()))
+                        .WithDescription($"<@{user.Id}> (username: {user.Username}) has left!\n{guild.MemberCount} members remain...")
+                        .WithImageUrl(user.GetAvatarUrl());
+
+                    await channel.SendMessageAsync(embed: builder.Build());
+                }
+                else
+                    await guildSettings.RemoveModBotChannel(guild.Id);
+            }
         }
     }
 }

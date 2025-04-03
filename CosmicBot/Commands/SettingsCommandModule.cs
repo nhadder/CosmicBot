@@ -66,6 +66,76 @@ namespace CosmicBot.Commands
 
         }
 
+        [Group("studiospawner", "Designate Studio Spawner")]
+        public class CreatePrivateChannelSettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public CreatePrivateChannelSettings(GuildSettingsService service)
+            {
+                _service = service;
+            }
+
+            [SlashCommand("add", "Add a voice channel creator")]
+            public async Task AddVoiceChannelSpawner(IVoiceChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.SetCreatePrivateVoiceChannelId(Context.Guild.Id, channel.Id);
+                await Respond(new MessageResponse("Voice Channel Spawner Created", ephemeral: true));
+            }
+
+            [SlashCommand("remove", "Remove a voice channel creator")]
+            public async Task RemoveVoiceChannelSpawner()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveCreatePrivateVoiceChannelId(Context.Guild.Id);
+                await Respond(new MessageResponse("Voice Channel Spawner successfully removed", ephemeral: true));
+            }
+        }
+
+        [Group("logchannel", "Designate Channel for announcing member departures")]
+        public class ModBotChannelSettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public ModBotChannelSettings(GuildSettingsService service)
+            {
+                _service = service;
+            }
+
+            [SlashCommand("set", "Add a mod bot channel")]
+            public async Task AddModBotChannel(ITextChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.SetModBotChannel(Context.Guild.Id, channel.Id);
+                await Respond(new MessageResponse("Log channel specified", ephemeral: true));
+            }
+
+            [SlashCommand("remove", "stop announcing member departures")]
+            public async Task RemoveModBotChannel()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveModBotChannel(Context.Guild.Id);
+                await Respond(new MessageResponse("Log channel disconnected successfully", ephemeral: true));
+            }
+        }
+
         [Group("dancebattle","Dance battle settings")]
         public class DanceBattleSettings : CommandModule
         {

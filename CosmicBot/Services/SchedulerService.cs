@@ -41,6 +41,7 @@ namespace CosmicBot.Service
                         await BotChannelGifts(guildSettingsService, socketClient);
                         await DanceBattle(guildSettingsService, socketClient, playerService, context);
                         await MessageStore.CheckForExpiredMessages(socketClient);
+                        await ChannelStore.CheckForExpiredMessages(socketClient);
                     }
                     Thread.Sleep(TimeSpan.FromMinutes(1));
                 }

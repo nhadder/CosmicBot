@@ -56,7 +56,7 @@ namespace CosmicBot.Messages
             var message = await context.Interaction.FollowupAsync(embeds: embeds, components: components);
             _messageId = message.Id;
             _channelId = message.Channel.Id;
-            await MessageStore.AddMessage(context.Client, message.Id, this);
+            MessageStore.AddMessage(context.Client, message.Id, this);
         }
 
         public async Task<ulong> SendAsync(IDiscordClient client, IMessageChannel channel)
@@ -67,7 +67,7 @@ namespace CosmicBot.Messages
             var message = await channel.SendMessageAsync(embeds: embeds, components: components);
             _messageId = message.Id;
             _channelId = message.Channel.Id;
-            await MessageStore.AddMessage(client, message.Id, this);
+            MessageStore.AddMessage(client, message.Id, this);
             return message.Id;
         }
 
