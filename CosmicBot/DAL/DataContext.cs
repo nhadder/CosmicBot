@@ -13,6 +13,7 @@ namespace CosmicBot.DAL
         public DbSet<PlayerStats> PlayerStats { get; set; }
         public DbSet<DanceBattleMember> DanceBattleMembers { get; set; }
         public DbSet<Pet> Pets { get; set; }
+        public DbSet<Counts> Counts { get; set; }
 
         public DataContext(DbContextOptions<DataContext> options) : base(options) 
         {

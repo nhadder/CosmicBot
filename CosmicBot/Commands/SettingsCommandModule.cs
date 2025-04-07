@@ -63,6 +63,133 @@ namespace CosmicBot.Commands
 
                 await Respond(new MessageResponse("Bot channel successfully removed", ephemeral: true));
             }
+        }
+
+        [Group("countingchannel", "Designate Counting Channel")]
+        public class CountingChannelSettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public CountingChannelSettings(GuildSettingsService service)
+            {
+                _service = service;
+            }
+
+            [SlashCommand("add", "Add a Counting channel")]
+            public async Task AddCountingChannel(ITextChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await _service.SetCountingChannel(Context.Guild.Id, channel.Id);
+
+                await Respond(new MessageResponse($"Successfully set counting channel to <#{channel.Id}>", ephemeral: true));
+            }
+
+            [SlashCommand("remove", "Remove a Counting channel")]
+            public async Task RemoveCountingChannel(ITextChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveCountingChannel(Context.Guild.Id);
+
+                await Respond(new MessageResponse("Counting channel successfully removed", ephemeral: true));
+            }
+        }
+
+        [Group("birthday", "Designate Birthday Role and Channel")]
+        public class BirthdaySettings : CommandModule
+        {
+            public readonly GuildSettingsService _service;
+
+            public BirthdaySettings(GuildSettingsService service)
+            {
+                _service = service;
+            }
+
+            [SlashCommand("setchannel", "Add a birthday announcement channel")]
+            public async Task AddBirthdayChannel(ITextChannel channel)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await _service.SetBirthdayChannel(Context.Guild.Id, channel.Id);
+                await Respond(new MessageResponse("Birthday channel successfully added", ephemeral: true));
+            }
+
+            [SlashCommand("removechannel", "Remove the birthday channel")]
+            public async Task RemoveBotChannel()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveBirthdayChannel(Context.Guild.Id);
+
+                await Respond(new MessageResponse("Birthday channel successfully removed", ephemeral: true));
+            }
+
+            [SlashCommand("setrole", "Add a birthday role")]
+            public async Task AddBirthdayRole(IRole role)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await _service.SetBirthdayRole(Context.Guild.Id, role.Id);
+                await Respond(new MessageResponse("Birthday role successfully added", ephemeral: true));
+            }
+
+            [SlashCommand("removerole", "Remove the birthday role")]
+            public async Task RemoveBirthdayRole()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveBirthdayRole(Context.Guild.Id);
+
+                await Respond(new MessageResponse("Birthday role successfully removed", ephemeral: true));
+            }
+
+            [SlashCommand("setadultrole", "Add a adult role")]
+            public async Task AddAdultRole(IRole role)
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+
+                await _service.SetAdultRole(Context.Guild.Id, role.Id);
+                await Respond(new MessageResponse("Adult role successfully added", ephemeral: true));
+            }
+
+            [SlashCommand("removeadultrole", "Remove the adult role")]
+            public async Task RemoveAdultRole()
+            {
+                if (!HasChannelPermissions())
+                {
+                    await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+                    return;
+                }
+                await _service.RemoveAdultRole(Context.Guild.Id);
+
+                await Respond(new MessageResponse("Adult role successfully removed", ephemeral: true));
+            }
 
         }
 

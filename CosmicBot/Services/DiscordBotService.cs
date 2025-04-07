@@ -1,5 +1,5 @@
 ﻿using CosmicBot.Helpers;
-using CosmicBot.Messages;
+using CosmicBot.Services;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -38,6 +38,7 @@ namespace CosmicBot.Service
             _client.InteractionCreated += HandleInteraction;
             _client.UserVoiceStateUpdated += HandleVoiceStateUpdated;
             _client.UserLeft += HandleUserLeft;
+            _client.MessageReceived += HandleMessageReceived;
 
             await _client.LoginAsync(TokenType.Bot, _configuration["DISCORD_BOT_TOKEN"]);
             await _client.StartAsync();
@@ -123,6 +124,22 @@ namespace CosmicBot.Service
                 else
                     await guildSettings.RemoveModBotChannel(guild.Id);
             }
+        }
+
+        private async Task HandleMessageReceived(SocketMessage message)
+        {
+            if (message is not SocketUserMessage userMessage) return;
+            if (message.Channel is not SocketGuildChannel channel) return;
+            if (userMessage.Author.IsBot) return;
+
+            var guildId = channel.Guild.Id;
+            var guildSettings = _services.GetRequiredService<GuildSettingsService>();
+            var countingChannelId = guildSettings.GetCountingChannel(guildId);
+            if (countingChannelId == null) return;
+            if (userMessage.Channel.Id != countingChannelId) return;
+
+            var countingService = _services.GetRequiredService<CountingService>();
+            await countingService.TryAddCount(guildId, (ulong)countingChannelId, userMessage);
         }
     }
 }

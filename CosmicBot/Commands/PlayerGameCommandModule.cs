@@ -46,6 +46,19 @@ namespace CosmicBot.Commands
             await Respond(await _playerService.TransferPoints(Context.Guild.Id, Context.User.Id, to.Id, amount));
         }
 
+        [SlashCommand("birthday", "Set your birthday")]
+        public async Task Birthday(int month, int day, int year)
+        {
+            if (!HasChannelPermissions())
+            {
+                await Respond(new MessageResponse("I don't have valid permissions in this channel", ephemeral: true));
+
+            }
+
+            var guildUser = Context.Guild.Users.FirstOrDefault(u => u.Id == Context.User.Id);
+            await Respond(await _playerService.SetBirthday(Context.Guild.Id, Context.User.Id, month, day, year, guildUser));
+        }
+
         [Group("leaderboard", "See current leaderboards")]
         public class LeaderboardCommandModule : CommandModule
         {
