@@ -144,6 +144,78 @@ namespace CosmicBot.Service
             await SetSetting(guildId, GuildSettingNames.ModBotChannel, channelId.ToString());
         }
 
+        public ulong? GetBirthdayChannel(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.BirthdayChannel);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveBirthdayChannel(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.BirthdayChannel);
+        }
+
+        public async Task SetBirthdayChannel(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.BirthdayChannel, channelId.ToString());
+        }
+
+        public ulong? GetBirthdayRole(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.BirthdayRole);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveBirthdayRole(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.BirthdayRole);
+        }
+
+        public async Task SetBirthdayRole(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.BirthdayRole, channelId.ToString());
+        }
+
+        public ulong? GetAdultRole(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.AdultRole);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveAdultRole(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.AdultRole);
+        }
+
+        public async Task SetAdultRole(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.AdultRole, channelId.ToString());
+        }
+
+        public ulong? GetCountingChannel(ulong guildId)
+        {
+            var setting = GetSetting(guildId, GuildSettingNames.CountingChannel);
+            if (!string.IsNullOrEmpty(setting))
+                return Convert.ToUInt64(setting);
+            return null;
+        }
+
+        public async Task RemoveCountingChannel(ulong guildId)
+        {
+            await RemoveSetting(guildId, GuildSettingNames.CountingChannel);
+        }
+
+        public async Task SetCountingChannel(ulong guildId, ulong channelId)
+        {
+            await SetSetting(guildId, GuildSettingNames.CountingChannel, channelId.ToString());
+        }
+
         #region Private Methods
 
         private async Task SetSetting(ulong guildId, string key, string value)

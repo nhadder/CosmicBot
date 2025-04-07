@@ -14,5 +14,6 @@ namespace CosmicBot.Models
         public DateTime? LastDaily { get; set; } = null;
         public int GamesWon { get; set; } = 0;
         public int GamesLost { get; set; } = 0;
+        public DateTime? Birthday { get; set; } = null;
     }
 }

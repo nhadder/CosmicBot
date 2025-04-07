@@ -30,6 +30,41 @@ namespace CosmicBot.Service
             return playerStats;
         }
 
+        public async Task<MessageResponse> SetBirthday(ulong guildId, ulong userId, int month, int day, int year, IGuildUser? user)
+        {
+            if (year < 1900 || year > DateTime.UtcNow.Year || month < 1 || month > 12 || day < 1 || day > 31)
+                return new MessageResponse("Invalid date entered", ephemeral: true);
+
+            var playerStats = await GetPlayerStatsAsync(guildId, userId);
+            try
+            {
+                var bday = new DateTime(year, month, day);
+                playerStats.Birthday = bday;
+                _context.Update(playerStats);
+                await _context.SaveChangesAsync();
+
+                var adultRole = _guildSettings.GetAdultRole(guildId);
+                if (adultRole != null && user != null)
+                {
+                    if ((DateTime.UtcNow - bday).TotalDays > 364)
+                    {
+                        await user.AddRoleAsync((ulong)adultRole);
+                    }
+                }
+
+                return new MessageResponse($"Sucessfully set birthday to {bday.ToShortDateString()}", ephemeral: true);
+            }
+            catch
+            {
+                return new MessageResponse("Error setting birthday. Please make sure the date you entered is correct!", ephemeral: true);
+            }
+        }
+
+        public List<PlayerStats> GetUsersWithBirthdays(ulong guildId)
+        {
+            return _context.PlayerStats.Where(u => u.GuildId == guildId && u.Birthday != null).ToList();
+        }
+
         public async Task<MessageResponse> Daily(ulong guildId, ulong userId)
         {
             var player = await GetPlayerStatsAsync(guildId, userId);

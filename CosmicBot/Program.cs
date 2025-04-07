@@ -69,6 +69,7 @@ namespace CosmicBot
                     .AddScoped<GuildSettingsService>()
                     .AddScoped<PlayerService>()
                     .AddScoped<PetService>()
+                    .AddScoped<CountingService>()
                     //Command Modules
                     .AddScoped<MinecraftListCommandModule>()
                     .AddScoped<MinecraftServerCommandModule>()
@@ -132,7 +133,8 @@ namespace CosmicBot
             | GatewayIntents.GuildEmojis
             | GatewayIntents.Guilds
             | GatewayIntents.GuildVoiceStates
-            | GatewayIntents.GuildMessageTyping,
+            | GatewayIntents.GuildMessageTyping
+            | GatewayIntents.MessageContent,
             AlwaysDownloadUsers = true,
         };
 

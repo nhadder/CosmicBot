@@ -13,5 +13,11 @@
         public const string CreatePrivateVoiceChannel = "CreatePrivateVoiceChannel";
 
         public const string ModBotChannel = "ModBotChannel";
+
+        public const string BirthdayChannel = "BirthdayChannel";
+        public const string BirthdayRole = "BirthdayRole";
+        public const string AdultRole = "AdultRole";
+
+        public const string CountingChannel = "CountingChannel";
     }
 }

@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 
 namespace CosmicBot.Service
 {
@@ -26,6 +27,7 @@ namespace CosmicBot.Service
             {
                 try
                 {
+                    var sb = Stopwatch.StartNew();
                     using (var scope = _scopeFactory.CreateScope())
                     {
                         var context = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -40,10 +42,16 @@ namespace CosmicBot.Service
                         await HandleRedditPostTasks(redditService, guildSettingsService, socketClient, cancellationToken);
                         await BotChannelGifts(guildSettingsService, socketClient);
                         await DanceBattle(guildSettingsService, socketClient, playerService, context);
+                        await CheckForBirthdays(socketClient, guildSettingsService, playerService);
                         await MessageStore.CheckForExpiredMessages(socketClient);
                         await ChannelStore.CheckForExpiredMessages(socketClient);
                     }
-                    Thread.Sleep(TimeSpan.FromMinutes(1));
+                    sb.Stop();
+                    var timeLeft = TimeSpan.FromMinutes(1) - sb.Elapsed;
+                    if (timeLeft.Ticks > 0)
+                        Thread.Sleep(timeLeft);
+                    else
+                        Logger.Log($"Warning! Scheduled tasks took {sb.Elapsed.TotalSeconds} seconds to perform. System might be lagging...");
                 }
                 catch (Exception ex)
                 {
@@ -52,6 +60,67 @@ namespace CosmicBot.Service
                     {
                         ex = ex.InnerException;
                         Logger.Log($"{ex.Message}: {ex.StackTrace}");
+                    }
+                }
+            }
+        }
+
+        private static async Task CheckForBirthdays(DiscordSocketClient socketClient, GuildSettingsService guildSettingsService, PlayerService playerService)
+        {
+            foreach (var guild in socketClient.Guilds)
+            {
+                var birthdayRole = guildSettingsService.GetBirthdayRole(guild.Id);
+                var birthdayChannel = guildSettingsService.GetBirthdayChannel(guild.Id);
+                var adultRole = guildSettingsService.GetAdultRole(guild.Id);
+                if (birthdayRole == null && birthdayChannel == null)
+                    continue;
+
+                var members = playerService.GetUsersWithBirthdays(guild.Id);
+                var guildTimeNow = guildSettingsService.GetGuildTime(guild.Id);
+                foreach (var member in members)
+                {
+                    if (member == null) continue;
+                    var bday = (DateTime)member.Birthday;
+
+                    var user = socketClient.GetGuild(member.GuildId).GetUser(member.UserId);
+                    if (user == null) continue;
+
+                    if (bday.Month == guildTimeNow.Month && bday.Day == guildTimeNow.Day)
+                    {
+                        if (birthdayRole != null)
+                        {
+                            if (!user.Roles.Any(r => r.Id == birthdayRole))
+                                await user.AddRoleAsync((ulong)birthdayRole);
+                        }
+
+                        if (adultRole != null && (guildTimeNow - bday).TotalDays > 364)
+                        {
+                            if (!user.Roles.Any(r => r.Id == adultRole))
+                                await user.AddRoleAsync((ulong)adultRole);
+                        }
+
+                        if (birthdayChannel != null && guildTimeNow.Hour == 0 && guildTimeNow.Minute == 0)
+                        {
+                            var bdayGif = await GifFetcher.GetRandomGifUrl("happy birthday");
+                            var builder = new EmbedBuilder()
+                                .WithAuthor(new EmbedAuthorBuilder()
+                                    .WithIconUrl(user.GetAvatarUrl()))
+                                .WithColor(Color.Purple)
+                                .WithImageUrl(bdayGif)
+                                .WithDescription($"**Happy Birthday <@{user.Id}>!**");
+
+                            var channel = socketClient.GetGuild(member.GuildId).GetTextChannel((ulong)birthdayChannel);
+                            await channel.SendMessageAsync(embed: builder.Build());
+                            await channel.SendMessageAsync($"<@{user.Id}>");
+                        }
+                    }
+                    else
+                    {
+                        if (birthdayRole != null)
+                        {
+                            if (user.Roles.Any(r => r.Id == birthdayRole))
+                                await user.RemoveRoleAsync((ulong)birthdayRole);
+                        }
                     }
                 }
             }
