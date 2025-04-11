@@ -67,7 +67,7 @@ namespace CosmicBot.Messages.Components
                     var rng = new Random();
                     if(rng.Next(3) == 0)
                     {
-                        var stars = rng.Next(101);
+                        var stars = rng.Next(100) * Pet.Age;
                         Awards.Add(new PlayerAward(_user.Id, stars, 0, 0, 0));
                         _lastAction = $"You threw a ball to {Pet.Name}.\nThey brought back some stars!\nYou received **{stars}** stars!";
                     }
@@ -86,12 +86,12 @@ namespace CosmicBot.Messages.Components
         {
             if (!Pet.Dirty)
             {
-                if (Pet.TimeSinceLastCleaned.TotalDays > 1)
+                if (Pet.TimeSinceLastCleaned.TotalHours > 13)
                 {
                     var rng = new Random();
                     if (rng.Next(2) == 0)
                     {
-                        var stars = rng.Next(501);
+                        var stars = rng.Next(200) * Pet.Age;
                         Awards.Add(new PlayerAward(_user.Id, stars, 0, 0, 0));
                         _lastAction = $"You cleaned out {Pet.Name}'s room.\nYou found some stars!\nYou received **{stars}** stars!";
                     }

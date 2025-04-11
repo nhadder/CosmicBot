@@ -236,7 +236,7 @@ namespace CosmicBot.Commands
                 return;
             }
 
-            await new Battle(Context, opponent, player.Level, player2.Level, bet).SendAsync(Context);
+            await new Battle(Context, opponent, PlayerService.GetLevelFromXp(player.Experience), PlayerService.GetLevelFromXp(player2.Experience), bet).SendAsync(Context);
         }
 
         [Group("pet", "Buy and raise a pet!")]

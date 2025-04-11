@@ -265,18 +265,18 @@ namespace CosmicBot.Messages.Components
         {
             if (status == GameStatus.Won)
             {
-                Awards.Add(new PlayerAward(_userId, _bet, 100, 1, 0));
-                Awards.Add(new PlayerAward(_player2Id, -_bet, 10, 0, 1));
+                Awards.Add(new PlayerAward(_userId, _bet, _bet * 100, 1, 0));
+                Awards.Add(new PlayerAward(_player2Id, -_bet, _bet * 10, 0, 1));
             }
             if (status == GameStatus.Lost)
             {
-                Awards.Add(new PlayerAward(_player2Id, _bet, 100, 1, 0));
-                Awards.Add(new PlayerAward(_userId, -_bet, 10, 0, 1));
+                Awards.Add(new PlayerAward(_player2Id, _bet, _bet * 100, 1, 0));
+                Awards.Add(new PlayerAward(_userId, -_bet, _bet * 10, 0, 1));
             }
             if (status == GameStatus.Tie)
             {
-                Awards.Add(new PlayerAward(_userId, 0, 50, 0, 0));
-                Awards.Add(new PlayerAward(_player2Id, 0, 50, 0, 0));
+                Awards.Add(new PlayerAward(_userId, 0, _bet * 50, 0, 0));
+                Awards.Add(new PlayerAward(_player2Id, 0, _bet * 50, 0, 0));
             }
 
             Status = status;
@@ -340,17 +340,17 @@ namespace CosmicBot.Messages.Components
                 var result = string.Empty;
                 if (Status == GameStatus.Won)
                 {
-                    result = $"{_username} won! They gained **{_bet}** stars and **100** XP!\n";
-                    result += $"{_player2Username} lost. They lost **{_bet}** stars and gained **10** XP!";
+                    result = $"{_username} won! They gained **{_bet}** stars and **{_bet * 100}** XP!\n";
+                    result += $"{_player2Username} lost. They lost **{_bet}** stars and gained **{_bet * 10}** XP!";
                 }
 
                 if (Status == GameStatus.Lost)
                 {
-                    result = $"{_player2Username} won! They gained **{_bet}** stars and **100** XP!\n";
-                    result += $"{_username} lost. They lost **{_bet}** stars and gained **10** XP!";
+                    result = $"{_player2Username} won! They gained **{_bet}** stars and **{_bet * 100}** XP!\n";
+                    result += $"{_username} lost. They lost **{_bet}** stars and gained **{_bet * 10}** XP!";
                 }
                 if (Status == GameStatus.Tie)
-                    result = $"Tie!\n You both gained **50** XP!";
+                    result = $"Tie!\n You both gained **{_bet * 50}** XP!";
 
                 if (!string.IsNullOrWhiteSpace(result))
                 {
