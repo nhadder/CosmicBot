@@ -154,7 +154,7 @@ namespace CosmicBot.Service
             var level = GetLevelFromXp(playerStats.Experience);
             var playerCard = new EmbedBuilder()
                 .WithThumbnailUrl(user.GetDisplayAvatarUrl())
-                .WithDescription($"**Level:** {level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(level)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
+                .WithDescription($"**Level:** {level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(level+1)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
                 .WithAuthor(new EmbedAuthorBuilder().WithName(user.GlobalName).WithIconUrl(user.GetAvatarUrl()))
                 .Build();
 
