@@ -114,11 +114,10 @@ namespace CosmicBot.Service
                     {
                         if (randomPost.IsImage)
                         {
-                            var builder = new EmbedBuilder()
+                            return new MessageResponse(embed: new EmbedBuilder()
                                 .WithTitle(randomPost.Title ?? string.Empty)
                                 .WithImageUrl(randomPost.Url)
-                                .WithFooter($"r/{subreddit}");
-                            return new MessageResponse(embed: builder.Build());
+                                .WithFooter($"r/{subreddit}").Build());
                         }
                         else if (randomPost.Is_gallery != null && randomPost.Is_gallery == true)
                         {
@@ -136,22 +135,24 @@ namespace CosmicBot.Service
                         {
                             return new MessageResponse(text: randomPost?.Url ?? string.Empty);
                         }
-                        else
-                        {
-                            var builder = new EmbedBuilder()
-                                .WithTitle(randomPost?.Title ?? string.Empty)
-                                .WithDescription(randomPost?.Selftext?.Substring(0, 4093) ?? string.Empty)
-                                .WithUrl(randomPost?.Url ?? string.Empty)
-                                .WithFooter($"r/{subreddit}");
-                            return new MessageResponse(embed: builder.Build());
-                        }
+
+                        if (randomPost.Selftext != null)
+                            randomPost.Selftext = randomPost.Selftext.Length > 4093 ? randomPost.Selftext.Substring(0, 4093) + "..." : randomPost.Selftext;
+
+                        var builder = new EmbedBuilder()
+                            .WithTitle(randomPost?.Title ?? string.Empty)
+                            .WithDescription(randomPost?.Selftext ?? string.Empty)
+                            .WithUrl(randomPost?.Url ?? string.Empty)
+                            .WithFooter($"r/{subreddit}");
+                        return new MessageResponse(embed: builder.Build());
+                        
                     }
                 }
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching top image post: {ex.Message}");
+                Console.WriteLine($"Error fetching top image post: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
         }
