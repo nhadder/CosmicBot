@@ -170,11 +170,11 @@ namespace CosmicBot.Messages.Components
 
                 var bonus = hand.Doubled ? _bet : 0;
                 if (hand.Status == GameStatus.Won)
-                    Awards.Add(new PlayerAward(_userId, _bet + bonus, (_bet + bonus) * 20, 1, 0));
+                    Awards.Add(new PlayerAward(_userId, _bet + bonus, 50, 1, 0));
                 if (hand.Status == GameStatus.Lost)
-                    Awards.Add(new PlayerAward(_userId, -_bet - bonus, (_bet + bonus) * 5, 0, 1));
+                    Awards.Add(new PlayerAward(_userId, -_bet - bonus, 10, 0, 1));
                 if (hand.Status == GameStatus.Tie)
-                    Awards.Add(new PlayerAward(_userId, 0, (_bet + bonus) * 10, 0, 0));
+                    Awards.Add(new PlayerAward(_userId, 0, 25, 0, 0));
             }
 
             Buttons.Clear();
@@ -199,11 +199,11 @@ namespace CosmicBot.Messages.Components
                 handTotalStrings.Add(userTotal);
                 var bonus = hand.Doubled ? _bet : 0;
                 if (hand.Status == GameStatus.Won)
-                    results.Add($"You won! You gained **{_bet + bonus}** stars and **{(_bet + bonus) * 20}** XP!");
+                    results.Add($"You won! You gained **{_bet + bonus}** stars and **{50}** XP!");
                 if (hand.Status == GameStatus.Lost)
-                    results.Add($"You lose! You lost **{_bet + bonus}** stars and gained **{(_bet + bonus) * 5}** XP!");
+                    results.Add($"You lose! You lost **{_bet + bonus}** stars and gained **{10}** XP!");
                 if (hand.Status == GameStatus.Tie)
-                    results.Add($"Push. You gained **{(_bet + bonus) * 10}** XP!");
+                    results.Add($"Push. You gained **{25}** XP!");
             }
 
             var dealerCards = _dealerCards.Count == 1 ?
