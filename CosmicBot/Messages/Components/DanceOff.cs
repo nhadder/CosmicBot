@@ -135,8 +135,9 @@ namespace CosmicBot.Messages.Components
                     .WithImageUrl(_winner.ImageUrl)
                     .WithDescription($"<@{_winner.UserId}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
 
-                await channel.SendMessageAsync(embed: embedBuilder.Build());
+                var winnerMessage = await channel.SendMessageAsync(embed: embedBuilder.Build());
                 await channel.SendMessageAsync($"<@{_winner.UserId}>");
+                await winnerMessage.PinAsync();
             }
             Buttons.Clear();
             Expired = true;

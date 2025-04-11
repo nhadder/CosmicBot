@@ -3,10 +3,9 @@ using CosmicBot.DiscordResponse;
 using CosmicBot.Models;
 using CosmicBot.Models.Enums;
 using Discord;
-using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Text;
-using System.Text.Json;
 
 namespace CosmicBot.Service
 {
@@ -28,17 +27,8 @@ namespace CosmicBot.Service
         public async Task<MessageResponse> Post(string subreddit, RedditCategory category = RedditCategory.Hot)
         {
             subreddit = subreddit.StartsWith(("r/")) ? subreddit.Substring(2) : subreddit;
-            var imageUrl = await GetRandomImagePostAsync(subreddit, category);
-            if (!string.IsNullOrWhiteSpace(imageUrl))
-            {
-                var embed = new EmbedBuilder()
-                    .WithImageUrl(imageUrl)
-                    .WithColor(Color.Blue)
-                    .WithFooter($"r/{subreddit}")
-                    .Build();
-                return new MessageResponse(embed: embed);
-            }
-            return new MessageResponse("Unable to find image on that subreddit", ephemeral: true);
+            var post  = await GetRandomPostAsync(subreddit, category);
+            return post != null ? post : new MessageResponse("Unable to find a suitable post on that subreddit", ephemeral: true);
         }
 
         #region AutoPosts
@@ -105,7 +95,7 @@ namespace CosmicBot.Service
 
         #region Private Methods
 
-        private async Task<string?> GetRandomImagePostAsync(string subreddit, RedditCategory category = RedditCategory.Hot)
+        private async Task<MessageResponse?> GetRandomPostAsync(string subreddit, RedditCategory category = RedditCategory.Hot)
         {
             string url = $"https://www.reddit.com/r/{subreddit}/{category.ToString().ToLower()}.json?limit=50&t=day";
 
@@ -114,23 +104,50 @@ namespace CosmicBot.Service
                 HttpResponseMessage response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 string json = await response.Content.ReadAsStringAsync();
-
-                using JsonDocument doc = JsonDocument.Parse(json);
-                var posts = doc.RootElement
-                    .GetProperty("data").GetProperty("children")
-                    .EnumerateArray()
-                    .Select(p => p.GetProperty("data"))
-                    .Where(p =>
+                var redditResponse = JsonConvert.DeserializeObject<RedditData<RedditListingData>>(json);
+                if(redditResponse != null)
+                {
+                    var posts = redditResponse.Data.Children.Select(x => x.Data);
+                    Random rng = new Random();
+                    var randomPost = posts.OrderBy(_ => rng.Next()).FirstOrDefault();
+                    if (randomPost != null)
                     {
-                        string url = p.GetProperty("url").GetString() ?? "";
-                        return url.EndsWith(".jpg") || url.EndsWith(".png") || url.EndsWith(".gif") || url.EndsWith(".gifv") || url.EndsWith(".jpeg");
-                    }).ToList();
-
-                Random rng = new Random();
-                var topPost = posts.Where(p => p.ValueKind != JsonValueKind.Undefined).OrderBy(_ => rng.Next()).FirstOrDefault();
-                if (topPost.TryGetProperty("url", out var postUrl) == false)
-                    return "No post found...";
-                return postUrl.GetString();
+                        if (randomPost.IsImage)
+                        {
+                            var builder = new EmbedBuilder()
+                                .WithTitle(randomPost.Title ?? string.Empty)
+                                .WithImageUrl(randomPost.Url)
+                                .WithFooter($"r/{subreddit}");
+                            return new MessageResponse(embed: builder.Build());
+                        }
+                        else if (randomPost.Is_gallery != null && randomPost.Is_gallery == true)
+                        {
+                            return new MessageResponse(text: randomPost?.Url ?? string.Empty);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(randomPost?.Media?.Reddit_video?.Fallback_url))
+                        {
+                            return new MessageResponse(text: randomPost?.Media?.Reddit_video?.Fallback_url ?? string.Empty);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(randomPost?.Preview?.Reddit_video_preview?.Fallback_url))
+                        {
+                            return new MessageResponse(text: randomPost?.Preview?.Reddit_video_preview?.Fallback_url ?? string.Empty);
+                        }
+                        else if (randomPost?.Url != null && !randomPost.Url.ToLower().Contains("reddit"))
+                        {
+                            return new MessageResponse(text: randomPost?.Url ?? string.Empty);
+                        }
+                        else
+                        {
+                            var builder = new EmbedBuilder()
+                                .WithTitle(randomPost?.Title ?? string.Empty)
+                                .WithDescription(randomPost?.Selftext?.Substring(0, 4093) ?? string.Empty)
+                                .WithUrl(randomPost?.Url ?? string.Empty)
+                                .WithFooter($"r/{subreddit}");
+                            return new MessageResponse(embed: builder.Build());
+                        }
+                    }
+                }
+                return null;
             }
             catch (Exception ex)
             {

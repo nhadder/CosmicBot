@@ -82,17 +82,14 @@ namespace CosmicBot.Service
             }
 
             var rng = new Random();
-            var pointsEarned = Convert.ToInt64(Math.Floor((rng.NextDouble()*50 + 50) * player.Level));
-            var experienceEarned = 10 * player.Level;
+            var oldLevel = GetLevelFromXp(player.Experience);
+            var pointsEarned = Convert.ToInt64(rng.Next(100 * oldLevel));
+            var experienceEarned = Convert.ToInt64(rng.Next(100 * oldLevel));
 
-            player.Points += pointsEarned;
-            player.Experience += experienceEarned;
+            await Award(guildId, userId, pointsEarned, experienceEarned);
 
-            var oldLevel = player.Level;
-            var newLevel = GetLevelFromXp(player.Experience);
+            var newLevel = GetLevelFromXp(player.Experience + experienceEarned);
             var leveledUp = newLevel > oldLevel ? $"\nYou leveled up! You are now level **{newLevel}**" : string.Empty;
-
-            player.Level = newLevel;
 
             player.LastDaily = guildTimeNow;
             _context.Update(player);
@@ -136,14 +133,15 @@ namespace CosmicBot.Service
         public async Task<List<string>> LevelLeaderboard(ulong guildId, IInteractionContext interactionContext)
         {
             var playersInGuild = (await _context.PlayerStats.Where(p => p.GuildId == guildId).ToListAsync())
-                .OrderByDescending(l => l.Level).ToList();
+                .OrderByDescending(l => GetLevelFromXp(l.Experience)).ToList();
             var playerStats = new List<string>();
             for (var i = 0; i < playersInGuild.Count; i++)
             {
                 var player = playersInGuild[i];
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
+                var level = GetLevelFromXp(player.Experience);
                 var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
-                var stars = $"{player.Level} level";
+                var stars = $"Lvl. {level}";
                 stars = stars.PadRight(16);
                 playerStats.Add($"{i + 1}. {stars} {name}");
             }
@@ -153,9 +151,10 @@ namespace CosmicBot.Service
         public async Task<MessageResponse> StatCard(ulong guildId, IUser user)
         {
             var playerStats = await GetPlayerStatsAsync(guildId, user.Id);
+            var level = GetLevelFromXp(playerStats.Experience);
             var playerCard = new EmbedBuilder()
                 .WithThumbnailUrl(user.GetDisplayAvatarUrl())
-                .WithDescription($"**Level:** {playerStats.Level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(playerStats.Level)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
+                .WithDescription($"**Level:** {level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(level)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
                 .WithAuthor(new EmbedAuthorBuilder().WithName(user.GlobalName).WithIconUrl(user.GetAvatarUrl()))
                 .Build();
 
@@ -173,8 +172,6 @@ namespace CosmicBot.Service
                 player.GamesWon += gamesWon ?? 0;
                 player.GamesLost += gamesLost ?? 0;
 
-                player.Level = GetLevelFromXp(player.Experience);
-
                 if (player.Points < 0)
                     player.Points = 0;
 
@@ -189,35 +186,14 @@ namespace CosmicBot.Service
             return false;
         }
 
-        private static int GetLevelFromXp(long experience)
+        public static int GetLevelFromXp(long experience)
         {
-            int level = 1;
-            int threshold = 20;
-
-            while (experience >= threshold)
-            {
-                level++;
-                threshold *= 2;
-                experience -= threshold / 2;
-            }
-
-            return level;
+            return Convert.ToInt32(Math.Floor(Math.Sqrt(experience / 100)));
         }
 
         private static int GetXpForLevel(int level)
         {
-            if (level < 1) return 0;
-
-            int xpRequired = 0;
-            int threshold = 20;
-
-            for (int currentLevel = 1; currentLevel <= level; currentLevel++)
-            {
-                xpRequired += threshold;
-                threshold *= 2;
-            }
-
-            return xpRequired;
+            return level * level * 100;
         }
     }
 }
