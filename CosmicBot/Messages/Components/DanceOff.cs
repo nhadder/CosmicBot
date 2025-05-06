@@ -129,7 +129,7 @@ namespace CosmicBot.Messages.Components
             if (status == GameStatus.Won)
             {
                 _winner = _survivors.First();
-                Awards.Add(new PlayerAward(_winner.UserId, 10_000, 10_000, 1, 0));
+                Awards.Add(new PlayerAward(_winner.UserId, 100_000, 100_000, 1, 0));
                 var embedBuilder = new EmbedBuilder()
                     .WithTitle($"Dance Battle - Winner {_winner.Name}")
                     .WithImageUrl(_winner.ImageUrl)
@@ -184,7 +184,7 @@ namespace CosmicBot.Messages.Components
                         .WithImageUrl(_startingGifUrl)
                         .WithFields(new EmbedFieldBuilder()
                             .WithName("Prize")
-                            .WithValue($"**10,000** stars and **10,000** XP"),
+                            .WithValue($"**100,000** stars and **100,000** XP"),
                         new EmbedFieldBuilder()
                             .WithName("Time Left To Join")
                             .WithValue($"{timeLeft.Hours} hours {timeLeft.Minutes} minutes"),
@@ -201,7 +201,7 @@ namespace CosmicBot.Messages.Components
                         .WithImageUrl(_startingGifUrl)
                         .WithFields(new EmbedFieldBuilder()
                             .WithName("Prize")
-                            .WithValue($"**10,000** stars and **10,000** XP"),
+                            .WithValue($"**100,000** stars and **100,000** XP"),
                         new EmbedFieldBuilder()
                             .WithName("Dancers Joined")
                             .WithValue($"{Dancers.Count}"));
@@ -220,7 +220,7 @@ namespace CosmicBot.Messages.Components
         private List<string> _loseMessages = new List<string>()
         {
             "lost embarssingly!",
-            "litteraly **BROKE** their leg...",
+            "literaly **BROKE** their leg...",
             "tripped over their own feet.",
             "couldn't keep up to the beat.",
             "danced like a grandma.",
@@ -231,7 +231,29 @@ namespace CosmicBot.Messages.Components
             "needs to work on that move some more...",
             "made the crowd disappear and now the bar in the back is too crowded",
             "made everyone question the definition of \"dancing\"",
-
+            "forgot what rhythm even is.",
+            "*accidentally* did the worm... backwards.",
+            "got tangled in their own shoelaces.",
+            "thought it was a yoga competition instead.",
+            "hit themselves with their own elbow somehow.",
+            "moved like a broken robot with low battery.",
+            "*panicked* and started flossing.",
+            "just stood there... blinking.",
+            "looked like they were being chased by bees.",
+            "didn't dance — they just *vibrated*.",
+            "tried to twerk. The floor cracked.",
+            "turned the vibe into a funeral.",
+            "caused the DJ to *turn off the music*.",
+            "got caught in a spin and never recovered.",
+            "performed the *invisible dance* — no one saw it.",
+            "moonwalked off the stage... into the wall.",
+            "forgot which way was up.",
+            "*screamed* their way through the routine.",
+            "made someone drop their drink out of secondhand embarrassment.",
+            "looked like a confused penguin.",
+            "might have summoned a demon with those moves.",
+            "turned the dance battle into a cringe compilation.",
+            "got eliminated by *popular vote*. Harsh."
         };
 
         private List<string> _winnerMessages = new List<string>()
@@ -247,7 +269,28 @@ namespace CosmicBot.Messages.Components
             "received a round of applause",
             "has definetely been practicing at home",
             "inspired the crowd to join in their awesome dance move",
-            "made everyone jealous with their epic dance moves"
+            "made everyone jealous with their epic dance moves",
+            "**OWNED** the floor like it was their living room.",
+            "got the crowd chanting their name!",
+            "turned the dance battle into a victory lap.",
+            "unleashed the *forbidden move*... and it WORKED.",
+            "summoned a flash mob mid-routine.",
+            "spun so fast they reversed time (almost).",
+            "*levitated* with the power of the beat.",
+            "outdanced gravity itself.",
+            "redefined what rhythm means.",
+            "stole the spotlight — and everyone's hearts.",
+            "had moves so smooth, butter took notes.",
+            "left their opponent stunned and spinning.",
+            "wowed the judges with a surprise backflip.",
+            "snapped so hard, the floor clapped back.",
+            "didn't just dance — they *ascended*.",
+            "did *THE* move. You know the one.",
+            "was born for this moment.",
+            "took a bow before the applause even started.",
+            "landed a triple spin with style and sass.",
+            "executed the cleanest moonwalk since MJ.",
+            "left the floor smoking — someone call the fire marshal!"
         };
     }   
 }
