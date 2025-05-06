@@ -164,7 +164,7 @@ namespace CosmicBot.Service
                     var messageId = settings.GetDanceBattleMessageId(guild.Id);
                     if(messageId == null)
                     {
-                        var startTime = DateTime.UtcNow.AddHours(24);
+                        var startTime = DateTime.UtcNow.AddDays(1);
                         await settings.SetDanceBattleStartTime(guild.Id, startTime);
                         var danceBattle = await new DanceOff(null, startTime).SendAsync(socketClient, channel);
                         await settings.SetDanceBattleMessageId(guild.Id, danceBattle);
