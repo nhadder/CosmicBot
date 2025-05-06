@@ -10,6 +10,7 @@ namespace CosmicBot.Messages.Components
     public class HigherLower : EmbedMessage
     {
         private List<PlayingCard> _cards = [];
+        private int _lives = 0;
         private int _streak = 0;
         private readonly string _username;
         private readonly string _iconUrl;
@@ -29,6 +30,7 @@ namespace CosmicBot.Messages.Components
         {
             Status = GameStatus.InProgress;
             _streak = 0;
+            _lives = 0;
             _cards = DealCards(1);
 
             var higherButton = new MessageButton("Higher", ButtonStyle.Success);
@@ -75,11 +77,24 @@ namespace CosmicBot.Messages.Components
             _cards.Add(newCard);
 
             if (((int)newCard.Number) < ((int)lastCard.Number))
-                GameOver(GameStatus.Lost);
+            {
+                if (lastCard.Number == PlayingCardNumber.Seven && _lives > 0)
+                {
+                    _streak++;
+                    _lives--;
+                }
+                else
+                    GameOver(GameStatus.Lost);
+            }
             else
-                _streak++;
+            {
+                if (lastCard.Number == PlayingCardNumber.Seven)
+                    _lives++;
 
-                return null;
+                _streak++;
+            }
+
+            return null;
         }
 
         private MessageResponse? Lower(IInteractionContext context)
@@ -92,9 +107,21 @@ namespace CosmicBot.Messages.Components
             _cards.Add(newCard);
 
             if (((int)newCard.Number) > ((int)lastCard.Number))
-                GameOver(GameStatus.Lost);
+            {
+                if (lastCard.Number == PlayingCardNumber.Seven && _lives > 0)
+                {
+                    _streak++;
+                    _lives--;
+                }
+                else
+                    GameOver(GameStatus.Lost);
+            }
             else
+            {
+                if (lastCard.Number == PlayingCardNumber.Seven)
+                    _lives++;
                 _streak++;
+            }
 
             return null;
         }
@@ -132,6 +159,8 @@ namespace CosmicBot.Messages.Components
                 var sb = new StringBuilder();
             sb.Append("```");
             sb.AppendLine(cards);
+            if (_lives > 0)
+                sb.AppendLine($"Seven Shields: {_lives}");
             sb.Append("```");
 
             if (!string.IsNullOrWhiteSpace(result))

@@ -77,8 +77,10 @@ namespace CosmicBot.Services
                     var newRecordMessage = await userMessage.Channel.SendMessageAsync($"Record: **{currentCount.Record}** by <@{currentCount.LastUserId}>");
                     await newRecordMessage.PinAsync();
                 }
-
-                await userMessage.Channel.SendMessageAsync("❌ Oops! Count broken. Start again from **1**.");
+                if (userMessage.Author.Id == currentCount.LastUserId)
+                    await userMessage.Channel.SendMessageAsync("❌ Oops! Count broken. Same user can't count twice in a row. Start again from **1**.");
+                else
+                    await userMessage.Channel.SendMessageAsync($"❌ Oops! Count broken. I was expecting **{currentCount.Count + 1}**. Start again from **1**.");
 
                 currentCount.Count = 0;
                 currentCount.LastUserId = null;

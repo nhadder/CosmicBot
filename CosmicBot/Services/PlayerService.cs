@@ -83,8 +83,8 @@ namespace CosmicBot.Service
 
             var rng = new Random();
             var oldLevel = GetLevelFromXp(player.Experience);
-            var pointsEarned = Convert.ToInt64(rng.Next(100 * oldLevel));
-            var experienceEarned = Convert.ToInt64(rng.Next(100 * oldLevel));
+            var pointsEarned = Convert.ToInt64(rng.Next(100 * oldLevel) + (100 * oldLevel));
+            var experienceEarned = Convert.ToInt64(rng.Next(100 * oldLevel) + (100 * oldLevel));
 
             await Award(guildId, userId, pointsEarned, experienceEarned);
 
