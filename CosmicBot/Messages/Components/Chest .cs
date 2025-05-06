@@ -1,5 +1,6 @@
 ﻿using CosmicBot.DiscordResponse;
 using Discord;
+using Discord.WebSocket;
 
 namespace CosmicBot.Messages.Components
 {
@@ -15,7 +16,7 @@ namespace CosmicBot.Messages.Components
             Buttons.Add(grabButton);
         }
 
-        private int CalculatePrize()
+        private static int CalculatePrize()
         {
             var rng = new Random();
             if (rng.Next(1_000) == 1)
@@ -42,6 +43,13 @@ namespace CosmicBot.Messages.Components
             _user = context.User.GlobalName;
             Expired = true;
             Awards.Add(new Models.PlayerAward(context.User.Id, _amount, 0, 0, 0));
+
+            var component = context.Interaction as SocketMessageComponent;
+            if (component != null)
+            {
+                Task.Run(async () => await component.Message.DeleteAsync()).Wait();
+            }
+
             return new MessageResponse($"You found {_amount} stars!", ephemeral: true);
         }
 

@@ -133,10 +133,25 @@ namespace CosmicBot.Messages.Components
                 var embedBuilder = new EmbedBuilder()
                     .WithTitle($"Dance Battle - Winner {_winner.Name}")
                     .WithImageUrl(_winner.ImageUrl)
-                    .WithDescription($"<@{_winner.UserId}> was the last one standing!\n They won **10,000** stars and **10,000** XP!");
+                    .WithDescription($"<@{_winner.UserId}> was the last one standing!\n They won **100,000** stars and **100,000** XP!");
 
                 var winnerMessage = await channel.SendMessageAsync(embed: embedBuilder.Build());
                 await channel.SendMessageAsync($"<@{_winner.UserId}>");
+
+                if (channel != null)
+                {
+                    var pins = await channel.GetPinnedMessagesAsync();
+                    if (pins != null)
+                    {
+                        var pinsByBot = pins.Where(p => p.Author.IsBot);
+                        foreach (var pin in pinsByBot)
+                        {
+                            if (pin is IUserMessage lastPinnedRecord)
+                                await lastPinnedRecord.UnpinAsync();
+                        }
+                    }
+                }
+
                 await winnerMessage.PinAsync();
             }
             Buttons.Clear();
