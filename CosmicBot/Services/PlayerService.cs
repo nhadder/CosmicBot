@@ -188,12 +188,12 @@ namespace CosmicBot.Service
 
         public static int GetLevelFromXp(long experience)
         {
-            return Convert.ToInt32(Math.Floor(Math.Sqrt(experience / 100)));
+            return Convert.ToInt32(Math.Floor(Math.Sqrt(experience / 100))) + 1;
         }
 
         private static int GetXpForLevel(int level)
         {
-            return level * level * 100;
+            return (level - 1) * (level - 1) * 100;
         }
     }
 }
