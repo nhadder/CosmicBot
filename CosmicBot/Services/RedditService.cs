@@ -136,7 +136,7 @@ namespace CosmicBot.Service
                             return new MessageResponse(text: randomPost?.Url ?? string.Empty);
                         }
 
-                        if (randomPost.Selftext != null)
+                        if (randomPost?.Selftext != null)
                             randomPost.Selftext = randomPost.Selftext.Length > 4093 ? randomPost.Selftext.Substring(0, 4093) + "..." : randomPost.Selftext;
 
                         var builder = new EmbedBuilder()

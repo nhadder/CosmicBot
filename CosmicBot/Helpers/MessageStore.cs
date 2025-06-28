@@ -13,7 +13,7 @@ namespace CosmicBot.Helpers
         private static readonly Dictionary<ulong, EmbedMessage> _messages = [];
         private static object _lock = new object();
 
-        public static void AddMessage(IDiscordClient client, ulong messageId, EmbedMessage message)
+        public static void AddMessage(ulong messageId, EmbedMessage message)
         {
             lock (_lock)
             {
@@ -33,7 +33,7 @@ namespace CosmicBot.Helpers
         {
             lock (_lock)
             {
-                return _messages.Where(m => m.GetType() == type)?.Select(m => m.Value).ToList() ?? new List<EmbedMessage>();
+                return _messages.Where(m => m.Value.GetType() == type)?.Select(m => m.Value).ToList() ?? new List<EmbedMessage>();
             }
         }
 

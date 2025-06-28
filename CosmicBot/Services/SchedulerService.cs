@@ -80,12 +80,13 @@ namespace CosmicBot.Service
                 foreach (var member in members)
                 {
                     if (member == null) continue;
-                    var bday = (DateTime)member.Birthday;
+                    var bday = member.Birthday;
+                    if (bday == null) continue;
 
                     var user = socketClient.GetGuild(member.GuildId).GetUser(member.UserId);
                     if (user == null) continue;
 
-                    if (bday.Month == guildTimeNow.Month && bday.Day == guildTimeNow.Day)
+                    if (bday?.Month == guildTimeNow.Month && bday?.Day == guildTimeNow.Day)
                     {
                         if (birthdayRole != null)
                         {
@@ -93,7 +94,7 @@ namespace CosmicBot.Service
                                 await user.AddRoleAsync((ulong)birthdayRole);
                         }
 
-                        if (adultRole != null && (guildTimeNow - bday).TotalDays > 364)
+                        if (adultRole != null && (guildTimeNow - bday)?.TotalDays > 364)
                         {
                             if (!user.Roles.Any(r => r.Id == adultRole))
                                 await user.AddRoleAsync((ulong)adultRole);
@@ -135,14 +136,14 @@ namespace CosmicBot.Service
                 {
                     var botChannels = settings.GetBotChannels(guild.Id);
                     var activeChests = MessageStore.GetMessagesOfType(typeof(Chest)).Count;
-                    if (botChannels != null && botChannels.Any() && activeChests < botChannels.Count)
+                    if (botChannels != null && botChannels.Count > 0 && activeChests == 0)
                     {
                         var rng = new Random();
                         var chosen = botChannels.OrderBy(_ => rng.Next()).First();
                         var channel = guild.Channels.FirstOrDefault(c => c.Id == chosen) as IMessageChannel;
                         if (channel != null)
                         {
-                            await new Chest().SendAsync(socketClient, channel);
+                            await new Chest().SendAsync(channel);
                         }
                     }
                 }
@@ -166,7 +167,7 @@ namespace CosmicBot.Service
                     {
                         var startTime = DateTime.UtcNow.AddDays(1);
                         await settings.SetDanceBattleStartTime(guild.Id, startTime);
-                        var danceBattle = await new DanceOff(null, startTime).SendAsync(socketClient, channel);
+                        var danceBattle = await new DanceOff(null, startTime).SendAsync(channel);
                         await settings.SetDanceBattleMessageId(guild.Id, danceBattle);
                     }
                     else
@@ -175,7 +176,7 @@ namespace CosmicBot.Service
                         if (!MessageStore.MessageExists((ulong)messageId))
                         {
                             var startTime = settings.GetDanceBattleStartTime(guild.Id);
-                            var newGame = await new DanceOff(previousMembers, startTime).SendAsync(socketClient, channel);
+                            var newGame = await new DanceOff(previousMembers, startTime).SendAsync(channel);
                             await settings.SetDanceBattleMessageId(guild.Id, newGame);
                         }
                         else
@@ -184,7 +185,7 @@ namespace CosmicBot.Service
                             if (message != null)
                             {
                                 await message.Next(channel);
-                                if (message.Status == Models.Enums.GameStatus.Won)
+                                if (message.Status == Models.Enums.GameStatus.Won || message.Status == Models.Enums.GameStatus.Rejected)
                                 {
                                     if (previousMembers.Count > 0)
                                     {
