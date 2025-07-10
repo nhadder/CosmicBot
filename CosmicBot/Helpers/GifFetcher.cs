@@ -11,7 +11,7 @@ namespace CosmicBot.Helpers
 
         private class GifResponse
         {
-            public GifObject? Data { get; set; }
+            public List<GifObject>? Data { get; set; }
         }
 
         private class GifObject
@@ -37,15 +37,15 @@ namespace CosmicBot.Helpers
             using (var httpClient = new HttpClient())
             {
                 httpClient.BaseAddress = _baseAddress;
-                var response = await httpClient.GetAsync($"random?api_key={_key}&tag={query}&rating=g");
+                var response = await httpClient.GetAsync($"search?api_key={_key}&q={query}&rating=g&limit=25&offset=0");
                 if (!response.IsSuccessStatusCode)
                     return string.Empty;
 
                 var gif = await response.Content.ReadFromJsonAsync<GifResponse>();
                 if(gif == null) 
                     return string.Empty;
-
-                return gif.Data?.Images?.Fixed_height?.Url ?? string.Empty;
+                var rng = new Random();
+                return gif.Data?.OrderBy(t => rng.Next()).First()?.Images?.Fixed_height?.Url ?? string.Empty;
             }
         }
 
@@ -56,6 +56,17 @@ namespace CosmicBot.Helpers
             var builder = new EmbedBuilder()
                 .WithImageUrl(url)
                 .WithFooter(tags);
+
+            return new MessageResponse(embed: builder.Build());
+        }
+
+        public async static Task<MessageResponse> GetGifEmoteMessage(string footer, string tags)
+        {
+            var url = await GetRandomGifUrl(tags);
+
+            var builder = new EmbedBuilder()
+                .WithImageUrl(url)
+                .WithDescription(footer);
 
             return new MessageResponse(embed: builder.Build());
         }
