@@ -40,7 +40,7 @@ namespace CosmicBot.Messages.Components
         public MessageResponse? Grab(IInteractionContext context)
         {
             Buttons.Clear();
-            _user = context.User.GlobalName;
+            _user = context.User.Username;
             Expired = true;
             Awards.Add(new Models.PlayerAward(context.User.Id, _amount, 0, 0, 0));
 

@@ -40,7 +40,7 @@ namespace CosmicBot.Helpers
                 }
             }
 
-            var newChannel = await guild.CreateVoiceChannelAsync($"🎧{user.GlobalName}'s Studio🎧", properties =>
+            var newChannel = await guild.CreateVoiceChannelAsync($"🎧{user.Username}'s Studio🎧", properties =>
             {
                 properties.CategoryId = category?.Id;
                 properties.Position = joinedChannel.Position + 1;
