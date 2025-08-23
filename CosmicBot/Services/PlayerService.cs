@@ -122,6 +122,8 @@ namespace CosmicBot.Service
             {
                 var player = playersInGuild[i];
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
+                if (user == null)
+                    continue;
                 var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
                 var stars = $"{player.Points} stars";
                 stars = stars.PadRight(16);
@@ -139,6 +141,8 @@ namespace CosmicBot.Service
             {
                 var player = playersInGuild[i];
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
+                if (user == null)
+                    continue;
                 var level = GetLevelFromXp(player.Experience);
                 var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
                 var stars = $"Lvl. {level}";
