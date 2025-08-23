@@ -20,7 +20,7 @@ namespace CosmicBot.Messages.Components
         public HigherLower(IInteractionContext context) : base([context.User.Id])
         {
             _userId = context.User.Id;
-            _username = context.User.GlobalName;
+            _username = context.User.Username;
             _iconUrl = context.User.GetAvatarUrl();
 
             SetupGame(context);

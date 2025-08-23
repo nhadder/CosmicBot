@@ -114,7 +114,7 @@ namespace CosmicBot.Service
                 {
                     var builder = new EmbedBuilder()
                         .WithAuthor(new EmbedAuthorBuilder()
-                            .WithName($"{user.GlobalName}")
+                            .WithName($"{user.Username}")
                             .WithIconUrl(user.GetAvatarUrl()))
                         .WithDescription($"<@{user.Id}> (username: {user.Username}) has left!\n{guild.MemberCount} members remain...")
                         .WithImageUrl(user.GetAvatarUrl());

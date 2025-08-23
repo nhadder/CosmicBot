@@ -167,7 +167,7 @@ namespace CosmicBot.Messages.Components
                 {
                     GuildId = context.Guild.Id,
                     UserId = context.User.Id,
-                    Name = context.User.GlobalName,
+                    Name = context.User.Username,
                     ImageUrl = context.User.GetAvatarUrl()
                 });
                 return new MessageResponse(ephemeral: true, text: "You have joined the dance battle!");

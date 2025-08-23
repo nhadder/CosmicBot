@@ -124,7 +124,8 @@ namespace CosmicBot.Service
                 var user = await interactionContext.Client.GetUserAsync(player.UserId);
                 if (user == null)
                     continue;
-                var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
+
+                var name = user.Username.Length > 15 ? user.Username.Substring(0, 12) + "..." : user.Username;
                 var stars = $"{player.Points} stars";
                 stars = stars.PadRight(16);
                 playerStats.Add($"{i+1}. {stars} {name}");
@@ -144,7 +145,7 @@ namespace CosmicBot.Service
                 if (user == null)
                     continue;
                 var level = GetLevelFromXp(player.Experience);
-                var name = user.GlobalName.Length > 15 ? user.GlobalName.Substring(0, 12) + "..." : user.GlobalName;
+                var name = user.Username.Length > 15 ? user.Username.Substring(0, 12) + "..." : user.Username;
                 var stars = $"Lvl. {level}";
                 stars = stars.PadRight(16);
                 playerStats.Add($"{i + 1}. {stars} {name}");
@@ -159,7 +160,7 @@ namespace CosmicBot.Service
             var playerCard = new EmbedBuilder()
                 .WithThumbnailUrl(user.GetDisplayAvatarUrl())
                 .WithDescription($"**Level:** {level}\n**XP:** {playerStats.Experience}/{GetXpForLevel(level+1)}\n**Stars:** {playerStats.Points}\n**Games Won:** {playerStats.GamesWon}\n**Games Lost:** {playerStats.GamesLost}")
-                .WithAuthor(new EmbedAuthorBuilder().WithName(user.GlobalName).WithIconUrl(user.GetAvatarUrl()))
+                .WithAuthor(new EmbedAuthorBuilder().WithName(user.Username).WithIconUrl(user.GetAvatarUrl()))
                 .Build();
 
             return new MessageResponse(embed: playerCard);

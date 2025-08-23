@@ -28,7 +28,7 @@ namespace CosmicBot.Messages.Components
         {
             _bet = bet;
             _userId = context.User.Id;
-            _username = context.User.GlobalName;
+            _username = context.User.Username;
             _iconUrl = context.User.GetAvatarUrl();
 
             SetupGame(context);

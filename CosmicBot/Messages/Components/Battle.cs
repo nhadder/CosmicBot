@@ -50,8 +50,8 @@ namespace CosmicBot.Messages.Components
             _userId = context.User.Id;
             _player2Id = player2.Id;
 
-            _username = context.User.GlobalName;
-            _player2Username = player2.GlobalName;
+            _username = context.User.Username;
+            _player2Username = player2.Username;
 
             _iconUrl = context.User.GetAvatarUrl();
             _player2IconUrl = player2.GetAvatarUrl();

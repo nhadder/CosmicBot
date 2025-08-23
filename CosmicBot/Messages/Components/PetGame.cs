@@ -129,7 +129,7 @@ namespace CosmicBot.Messages.Components
                     .WithName("Feeling")
                     .WithIsInline(true)
                     .WithValue(Pet.Feeling))
-                .WithFooter($"{_user.GlobalName}'s pet");
+                .WithFooter($"{_user.Username}'s pet");
 
             return [builder.Build()];
         }
